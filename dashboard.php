@@ -8,8 +8,8 @@ require_once __DIR__ . '/config/db.php';
 cekLogin();
 
 $pageTitle = 'Dashboard';
-$userRole = $_SESSION['user_role'] ?? 'guest';
-$userNama = $_SESSION['user_nama'] ?? 'User';
+$userRole = $_SESSION['user_role'] ?? $_SESSION['role'] ?? 'guest';
+$userNama = $_SESSION['user_nama'] ?? $_SESSION['nama'] ?? $_SESSION['name'] ?? 'User';
 $userId = $_SESSION['user_id'] ?? 0;
 
 // ── Statistik Sampel ─────────────────────────────────────────
@@ -102,10 +102,179 @@ $selesaiBulan = $pdo->query(
 $target      = 50;
 $persenTarget = min(100, round($selesaiBulan / $target * 100));
 
+$jamSekarang = (int)date('H');
+if ($jamSekarang < 11) {
+    $sapaan = 'pagi';
+} elseif ($jamSekarang < 15) {
+    $sapaan = 'siang';
+} elseif ($jamSekarang < 18) {
+    $sapaan = 'sore';
+} else {
+    $sapaan = 'malam';
+}
+
+$roleLabels = [
+    'admin'      => 'Administrator',
+    'analis'     => 'Analis Laboratorium',
+    'supervisor' => 'Supervisor',
+    'klien'      => 'Klien',
+    'guest'      => 'Pengguna',
+];
+$roleLabel = $roleLabels[$userRole] ?? ucfirst($userRole);
+$alertTotal = (int)($alertData['total'] ?? 0);
+
+if (isAnalis()) {
+    $quickActions = [
+        ['href' => 'preparasi.php', 'icon' => '&#128260;', 'label' => 'Preparasi'],
+        ['href' => 'pengujian.php', 'icon' => '&#128300;', 'label' => 'Pengujian'],
+        ['href' => 'work_order.php', 'icon' => '&#128203;', 'label' => 'Work Order'],
+    ];
+} elseif (isSupervisor()) {
+    $quickActions = [
+        ['href' => 'qc.php', 'icon' => '&#10003;', 'label' => 'QC Validasi'],
+        ['href' => 'laporan.php', 'icon' => '&#128196;', 'label' => 'Laporan'],
+        ['href' => 'work_order.php', 'icon' => '&#128203;', 'label' => 'Work Order'],
+    ];
+} else {
+    $quickActions = [
+        ['href' => 'penerimaan.php', 'icon' => '&#128230;', 'label' => 'Penerimaan'],
+        ['href' => 'work_order.php', 'icon' => '&#128203;', 'label' => 'Work Order'],
+        ['href' => 'laporan.php', 'icon' => '&#128196;', 'label' => 'Laporan'],
+    ];
+}
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
 <style>
+.welcome-screen {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.85fr);
+    gap: 18px;
+    margin-bottom: 20px;
+    padding: 20px;
+    background:
+        linear-gradient(135deg, rgba(30, 132, 73, 0.18), transparent 42%),
+        var(--card);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--gold2);
+    border-radius: 12px;
+}
+.welcome-kicker {
+    color: var(--gold);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+.welcome-main h2 {
+    color: var(--text);
+    font-size: 1.55rem;
+    line-height: 1.25;
+    margin-bottom: 8px;
+}
+.welcome-main p {
+    color: var(--text2);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    max-width: 720px;
+}
+.welcome-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+.welcome-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 36px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: 0.2s;
+}
+.welcome-action:hover {
+    border-color: var(--gold2);
+    color: var(--gold);
+    transform: translateY(-1px);
+}
+.welcome-side {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.welcome-status {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: rgba(10, 26, 15, 0.55);
+}
+.welcome-status strong,
+.welcome-status span {
+    display: block;
+}
+.welcome-status strong {
+    color: var(--text);
+    font-size: 0.84rem;
+    margin-bottom: 4px;
+}
+.welcome-status span {
+    color: var(--text3);
+    font-size: 0.7rem;
+    line-height: 1.45;
+}
+.status-dot {
+    width: 10px;
+    height: 10px;
+    flex: 0 0 10px;
+    margin-top: 4px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 4px rgba(46, 204, 113, 0.12);
+}
+.welcome-status.needs-attention .status-dot {
+    background: var(--yellow);
+    box-shadow: 0 0 0 4px rgba(243, 156, 18, 0.13);
+}
+.welcome-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+}
+.welcome-metric {
+    min-height: 74px;
+    padding: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg2);
+}
+.welcome-metric span,
+.welcome-metric strong {
+    display: block;
+}
+.welcome-metric span {
+    color: var(--text3);
+    font-size: 0.64rem;
+    line-height: 1.35;
+}
+.welcome-metric strong {
+    color: var(--gold);
+    font-size: 1.28rem;
+    line-height: 1.2;
+    margin-bottom: 5px;
+}
+
 /* Layout Grid untuk 2 kolom */
 .dashboard-grid {
     display: grid;
@@ -404,7 +573,80 @@ require_once __DIR__ . '/includes/header.php';
     font-weight: 600;
     background: var(--bg3);
 }
+
+@media (max-width: 960px) {
+    .welcome-screen,
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    .welcome-metrics {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 600px) {
+    .welcome-screen {
+        padding: 16px;
+    }
+    .welcome-main h2 {
+        font-size: 1.3rem;
+    }
+    .welcome-action {
+        flex: 1 1 100%;
+        justify-content: center;
+    }
+    .welcome-metrics {
+        grid-template-columns: 1fr;
+    }
+}
 </style>
+
+<section class="welcome-screen" aria-label="Welcome screen dashboard">
+    <div class="welcome-main">
+        <div class="welcome-kicker">Selamat <?= bersihkan($sapaan) ?> &bull; <?= fmtTglPanjang(date('Y-m-d')) ?></div>
+        <h2>Selamat datang, <?= bersihkan($userNama) ?></h2>
+        <p>
+            Anda masuk sebagai <?= bersihkan($roleLabel) ?>. Fokus hari ini:
+            <?= $sampelAktif ?> sampel aktif, <?= $alertTotal ?> alert aktif,
+            dan target bulan ini sudah <?= $persenTarget ?>%.
+        </p>
+        <div class="welcome-actions">
+            <?php foreach ($quickActions as $action): ?>
+            <a class="welcome-action" href="<?= BASE_URL ?>/<?= $action['href'] ?>">
+                <span><?= $action['icon'] ?></span>
+                <?= bersihkan($action['label']) ?>
+            </a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <div class="welcome-side">
+        <div class="welcome-status <?= $alertTotal > 0 ? 'needs-attention' : 'stable' ?>">
+            <span class="status-dot" aria-hidden="true"></span>
+            <div>
+                <strong><?= $alertTotal > 0 ? $alertTotal . ' alert aktif' : 'Operasional stabil' ?></strong>
+                <span>
+                    <?= $alertTotal > 0
+                        ? 'Cek stok bahan, status alat, atau jadwal kalibrasi.'
+                        : 'Tidak ada alert prioritas untuk bahan dan peralatan.' ?>
+                </span>
+            </div>
+        </div>
+        <div class="welcome-metrics">
+            <div class="welcome-metric">
+                <strong><?= $sampelAktif ?></strong>
+                <span>Sampel aktif</span>
+            </div>
+            <div class="welcome-metric">
+                <strong><?= $pctLulus ?>%</strong>
+                <span>Tingkat kelulusan</span>
+            </div>
+            <div class="welcome-metric">
+                <strong><?= $persenTarget ?>%</strong>
+                <span>Target bulan ini</span>
+            </div>
+        </div>
+    </div>
+</section>
 
 <div class="sec-title">Ringkasan Hari Ini &mdash; <?= fmtTglPanjang(date('Y-m-d')) ?></div>
 
