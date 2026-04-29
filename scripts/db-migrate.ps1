@@ -53,10 +53,7 @@ $baseMigrations = @(
 $postMigrations = @(
     (Join-Path $projectRoot "fix_work_order_batch.sql"),
     (Join-Path $projectRoot "scripts/sql/patch_work_order_nullable.sql"),
-<<<<<<< HEAD
-=======
     (Join-Path $projectRoot "scripts/sql/patch_submission_tables.sql"),
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     (Join-Path $projectRoot "scripts/sql/patch_supervisor_role.sql"),
     (Join-Path $projectRoot "update_user_roles.sql")
 )

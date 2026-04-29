@@ -7,7 +7,6 @@ session_start();
 require_once __DIR__ . '/config/db.php';
 cekLogin();
 
-<<<<<<< HEAD
 if (isClient()) {
     header('Location: ' . BASE_URL . '/client_monitoring.php');
     exit;
@@ -16,11 +15,6 @@ if (isClient()) {
 $pageTitle = 'Dashboard';
 $userRole = $_SESSION['user_role'] ?? $_SESSION['role'] ?? 'guest';
 $userNama = $_SESSION['user_nama'] ?? $_SESSION['nama'] ?? 'User';
-=======
-$pageTitle = 'Dashboard';
-$userRole = $_SESSION['user_role'] ?? $_SESSION['role'] ?? 'guest';
-$userNama = $_SESSION['user_nama'] ?? $_SESSION['nama'] ?? $_SESSION['name'] ?? 'User';
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 $userId = $_SESSION['user_id'] ?? 0;
 
 // ── Statistik Sampel ─────────────────────────────────────────
@@ -113,8 +107,6 @@ $selesaiBulan = $pdo->query(
 $target      = 50;
 $persenTarget = min(100, round($selesaiBulan / $target * 100));
 
-<<<<<<< HEAD
-=======
 $jamSekarang = (int)date('H');
 if ($jamSekarang < 11) {
     $sapaan = 'pagi';
@@ -156,13 +148,10 @@ if (isAnalis()) {
     ];
 }
 
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 require_once __DIR__ . '/includes/header.php';
 ?>
 
 <style>
-<<<<<<< HEAD
-=======
 .welcome-screen {
     display: grid;
     grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.85fr);
@@ -291,7 +280,6 @@ require_once __DIR__ . '/includes/header.php';
     margin-bottom: 5px;
 }
 
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 /* Layout Grid untuk 2 kolom */
 .dashboard-grid {
     display: grid;
@@ -590,10 +578,6 @@ require_once __DIR__ . '/includes/header.php';
     font-weight: 600;
     background: var(--bg3);
 }
-<<<<<<< HEAD
-</style>
-
-=======
 
 @media (max-width: 960px) {
     .welcome-screen,
@@ -669,7 +653,6 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </section>
 
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 <div class="sec-title">Ringkasan Hari Ini &mdash; <?= fmtTglPanjang(date('Y-m-d')) ?></div>
 
 <!-- ── BARIS 1: STATUS SAMPEL + STATUS PENGUJIAN ────────────── -->
@@ -798,134 +781,53 @@ require_once __DIR__ . '/includes/header.php';
         </div>
         <?php endif; ?>
     </div>
-    <?php else: ?>
-    <!-- Jika bukan analis, tampilkan Alat Bermasalah di sini -->
-    <div class="stat-card">
-        <div class="label">ALAT BERMASALAH</div>
-        <div class="val yellow"><?= $alatMasalah ?></div>
-        <div class="sub">Maintenance / Rusak</div>
-        <?php if (!empty($alertAlat)): ?>
-        <div style="margin-top:12px">
-            <?php foreach (array_slice($alertAlat, 0, 3) as $a): ?>
-            <div style="font-size:0.7rem; color:var(--text3); margin-bottom:4px">
-                • <?= bersihkan($a['nama']) ?>: <?= $a['status'] ?>
-            </div>
-            <?php endforeach; ?>
-        </div>
-        <?php endif; ?>
-    </div>
     <?php endif; ?>
 </div>
 
-<!-- ── BARIS 3: ALERT & CHART (2 kolom) ──────────────────────── -->
-<div class="dashboard-grid">
-    <!-- Alert Notifikasi -->
-    <div class="stat-card">
-        <div class="label">⚠️ ALERT &amp; NOTIFIKASI</div>
-        <?php foreach ($alertBahan as $b):
-            $st = statusBahan($b['stok'], $b['stok_minimum']); ?>
-            <div class="alert-box <?= $st==='kritis' ? 'alert-red' : 'alert-yellow' ?>">
-                <?= $st==='kritis' ? '🔴' : '🟡' ?>
-                <strong><?= bersihkan($b['nama']) ?></strong>
-                — stok: <?= $b['stok'] ?> <?= bersihkan($b['satuan']) ?>
-            </div>
-        <?php endforeach; ?>
-        <?php foreach ($alertAlat as $a): ?>
-            <div class="alert-box <?= $a['status']==='rusak' ? 'alert-red' : 'alert-yellow' ?>">
-                <?= $a['status']==='rusak' ? '🔴' : '🟡' ?>
-                <strong><?= bersihkan($a['nama']) ?></strong>
-                — <?= bersihkan($a['status']) ?>
-            </div>
-        <?php endforeach; ?>
-        <?php if (!$alertBahan && !$alertAlat): ?>
-            <div class="alert-box alert-green">
-                ✅ Semua bahan dan peralatan dalam kondisi normal.
-            </div>
-        <?php endif; ?>
-    </div>
-
-    <!-- Chart Pengujian -->
-    <div class="stat-card">
-        <div class="label">📊 PENGUJIAN PER HARI <span style="font-size:0.6rem">7 hari terakhir</span></div>
-        <div class="bar-chart" id="weekchart"></div>
-        <div class="prog-wrap" style="margin-top:12px">
-            <div class="prog-label">
-                <span>Target Bulan Ini (<?= $selesaiBulan ?>/<?= $target ?>)</span>
-                <span><?= $persenTarget ?>%</span>
-            </div>
-            <div class="prog">
-                <div class="prog-bar pb-green" style="width:<?= $persenTarget ?>%"></div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- ── BARIS 4: PENERIMAAN TERBARU + PERALATAN ──────────────── -->
+<!-- ── BARIS 3: PENERIMAAN TERBARU + PERALATAN UTAMA ────────── -->
 <div class="dashboard-grid">
     <!-- Penerimaan Terbaru -->
     <div class="stat-card">
-        <div class="label">📦 PENERIMAAN TERBARU</div>
-        <div style="overflow-x:auto; margin-top:8px">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>No. Penerimaan</th><th>Klien</th><th>Tgl</th><th>Sampel</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach (array_slice($penerimaanTerbaru, 0, 5) as $p): ?>
-                <tr>
-                    <td style="font-weight:700;color:var(--gold);font-size:0.7rem"><?= bersihkan($p['nomor_penerimaan']) ?></td>
-                    <td style="font-size:0.7rem"><?= bersihkan($p['klien']) ?></td>
-                    <td style="font-size:0.65rem"><?= fmtTgl($p['tanggal_terima']) ?></td>
-                    <td style="text-align:center"><?= $p['jumlah_sampel'] ?></td>
-                </tr>
-                <?php endforeach; ?>
-                <?php if (!$penerimaanTerbaru): ?>
-                    <tr><td colspan="4" style="text-align:center;color:var(--text3);padding:16px">Belum ada penerimaan.</td></tr>
-                <?php endif; ?>
-            </tbody>
-        </table>
+        <div class="label">PENERIMAAN TERBARU</div>
+        <div style="overflow-x:auto">
+            <table class="data-table">
+                <thead>
+                    <tr><th>No. Rec</th><th>Klien</th><th>Sampel</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($penerimaanTerbaru as $p): ?>
+                    <tr>
+                        <td style="font-weight:700;color:var(--gold)"><?= $p['nomor_penerimaan'] ?></td>
+                        <td><?= bersihkan($p['klien']) ?></td>
+                        <td><?= $p['jumlah_sampel'] ?></td>
+                        <td><?= badgeStatus($p['status']) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Status Peralatan Utama -->
+    <!-- Peralatan Utama -->
     <div class="stat-card">
-        <div class="label">🔧 STATUS PERALATAN UTAMA</div>
-        <div style="overflow-x:auto; margin-top:8px">
-        <table class="data-table">
-            <thead><tr><th>Alat</th><th>Status</th></tr></thead>
-            <tbody>
-                <?php foreach (array_slice($alatUtama, 0, 5) as $a): ?>
-                <tr>
-                    <td style="font-size:0.7rem"><?= bersihkan($a['nama']) ?></td>
-                    <td><?= badgeStatus($a['status']) ?></td>
-                </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
+        <div class="label">STATUS PERALATAN</div>
+        <div style="overflow-x:auto">
+            <table class="data-table">
+                <thead>
+                    <tr><th>Nama Alat</th><th>Status</th><th>Kalibrasi</th></tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($alatUtama as $a): ?>
+                    <tr>
+                        <td><?= bersihkan($a['nama']) ?></td>
+                        <td><?= badgeStatus($a['status']) ?></td>
+                        <td><?= fmtTgl($a['masa_berlaku_kalibrasi']) ?></td>
+                    </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
-
-<script>
-const cd = <?= json_encode($chartData) ?>;
-const ch = document.getElementById('weekchart');
-if (cd.length > 0) {
-    const mx = Math.max(...cd.map(d => d.jml));
-    ch.innerHTML = '';
-    cd.forEach((d, i) => {
-        const col = document.createElement('div'); col.className = 'bar-col';
-        const bar = document.createElement('div');
-        bar.className = 'bar' + (i === cd.length - 1 ? ' gold' : '');
-        bar.style.height = (d.jml / mx * 80) + 'px';
-        const lbl = document.createElement('div'); lbl.className = 'bar-lbl';
-        lbl.textContent = d.tgl.slice(5);
-        col.appendChild(bar); col.appendChild(lbl); ch.appendChild(col);
-    });
-} else {
-    ch.innerHTML = '<p style="color:var(--color-text-tertiary);font-size:.78rem;padding:10px 0">Belum ada data minggu ini.</p>';
-}
-</script>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

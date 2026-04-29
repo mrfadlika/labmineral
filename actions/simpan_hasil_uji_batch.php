@@ -50,15 +50,11 @@ try {
          LEFT JOIN penerimaan_sampel rec ON s.penerimaan_id = rec.id
          WHERE s.id = ?"
     );
-<<<<<<< HEAD
+
     $stmtPenerimaan = $pdo->prepare("SELECT penerimaan_id FROM sampel WHERE id = ?");
 
     $saved = 0;
     $penerimaanIds = [];
-=======
-
-    $saved = 0;
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     foreach ($validRows as $r) {
         $sampelId = (int)$r['sampel_id'];
         $nilai    = (float)$r['nilai'];
@@ -88,34 +84,23 @@ try {
         ]);
 
         $saved++;
-<<<<<<< HEAD
         $stmtPenerimaan->execute([$sampelId]);
         $penerimaanId = (int)$stmtPenerimaan->fetchColumn();
         if ($penerimaanId) $penerimaanIds[$penerimaanId] = true;
-=======
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
-        // Status sampel dihandle oleh trigger database (FIX S-5)
     }
 
     $pdo->commit();
-<<<<<<< HEAD
 
     foreach (array_keys($penerimaanIds) as $penerimaanId) {
         syncPenerimaanCompletion($pdo, (int)$penerimaanId);
         cleanupCompletedClientAccounts($pdo, (int)$penerimaanId);
     }
 
-=======
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     $_SESSION['msg'] = "$saved hasil uji berhasil disimpan.";
 
 } catch (Exception $e) {
-    $pdo->rollBack();
+    if ($pdo->inTransaction()) $pdo->rollBack();
     $_SESSION['msg'] = 'ERROR: '.$e->getMessage();
 }
 
-<<<<<<< HEAD
 header('Location: '.BASE_URL.'/pengujian.php?tab=hasil'); exit;
-=======
-header('Location: '.BASE_URL.'/pengujian.php?tab=hasil'); exit;
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8

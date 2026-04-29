@@ -32,6 +32,7 @@ require_once __DIR__ . '/includes/header.php';
         <div style="overflow-x:auto">
         <table class="data-table">
             <thead>
+                <tr>
                     <th>Nama</th>
                     <th>Username</th>
                     <th>Email</th>
@@ -67,11 +68,7 @@ require_once __DIR__ . '/includes/header.php';
                         <option value="analis">Analis</option>
                         <option value="admin">Admin</option>
                         <option value="supervisor">Supervisor</option>
-<<<<<<< HEAD
                         <option value="client">Client</option>
-=======
-                        <option value="klien">Klien</option>
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
                     </select>
                 </div>
             </div>
@@ -90,8 +87,4 @@ require_once __DIR__ . '/includes/header.php';
         </form>
     </div>
 </div>
-<<<<<<< HEAD
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
-=======
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
