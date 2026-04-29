@@ -37,35 +37,27 @@ require_once __DIR__ . '/includes/header.php';
 ?>
 
 <style>
-.client-hero{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap}
-.client-hero h2{margin:0;color:var(--gold);font-size:1rem}
-.client-hero p{margin:5px 0 0;color:var(--text3);font-size:.78rem;max-width:680px}
-.monitor-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:16px}
-.monitor-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:12px;margin-bottom:14px}
-.monitor-code{font-family:monospace;color:var(--gold);font-weight:700;font-size:.95rem}
-.meta-grid{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));gap:10px;margin-bottom:14px}
-.meta-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 12px}
-.meta-box .lbl{font-size:.68rem;color:var(--text3);margin-bottom:4px}
-.meta-box .val{font-size:.86rem;color:var(--text);font-weight:700}
-.progress-wrap{height:8px;background:var(--bg3);border-radius:999px;overflow:hidden;border:1px solid var(--border)}
-.progress-bar{height:100%;background:var(--gold);border-radius:999px}
-.stage-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0 16px}
-.stage{border:1px solid var(--border);border-radius:8px;padding:9px 10px;background:var(--bg3);font-size:.72rem;color:var(--text3)}
-.stage.done{border-color:var(--green3);color:var(--green);background:#0d2318}
+.mon-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.mon-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:12px;flex-wrap:wrap}
+.mon-title{font-size:1.1rem;font-weight:700;color:var(--gold)}
+.mon-meta{font-size:.85rem;color:var(--text3)}
+.stepper{display:flex;justify-content:space-between;position:relative;margin-top:20px;padding-bottom:10px}
+.stepper::before{content:"";position:absolute;top:15px;left:0;right:0;height:3px;background:var(--border);z-index:1}
+.step{position:relative;z-index:2;text-align:center;flex:1}
+.step-icon{width:32px;height:32px;background:var(--bg3);border:2px solid var(--border);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:.8rem;color:var(--text3)}
+.step.active .step-icon{background:var(--gold);border-color:var(--gold);color:#000;box-shadow:0 0 10px rgba(255,215,0,.3)}
+.step.done .step-icon{background:var(--green);border-color:var(--green);color:#fff}
+.step-label{font-size:.72rem;font-weight:600;color:var(--text3)}
+.step.active .step-label,.step.done .step-label{color:var(--text)}
+.mon-stats{display:flex;gap:20px;margin-top:15px;font-size:.78rem;background:var(--bg3);padding:10px 15px;border-radius:8px;flex-wrap:wrap}
+.mon-stat-item{display:flex;align-items:center;gap:6px}
+.mon-stat-val{font-weight:700;color:var(--gold)}
 .invoice-box{background:#0d2318;border:1px solid var(--green3);border-radius:8px;padding:12px 14px;margin-top:14px;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
 .invoice-box .total{color:var(--gold);font-size:1rem;font-weight:800}
 .muted-note{color:var(--text3);font-size:.75rem;line-height:1.5}
-@media(max-width:900px){.meta-grid,.stage-row{grid-template-columns:1fr 1fr}}
-@media(max-width:560px){.meta-grid,.stage-row{grid-template-columns:1fr}}
 </style>
 
-<div class="client-hero">
-    <div>
-        <h2>Monitoring Sampel</h2>
-        <p>Gunakan halaman ini untuk melihat posisi pengajuan, penerimaan sampel, status pengujian, hasil yang sudah tersedia, dan invoice ketika pengujian selesai.</p>
-    </div>
-    <span class="user-chip">&#128100; <?= bersihkan($_SESSION['nama'] ?? '') ?></span>
-</div>
+<div class="sec-title">📊 Monitoring Progress Sampel</div>
 
 <?php if ($msg): ?>
     <div class="alert-box <?= str_starts_with($msg,'ERROR')?'alert-red':'alert-green' ?>" style="margin-bottom:14px">
@@ -140,11 +132,11 @@ require_once __DIR__ . '/includes/header.php';
     $mainCode = $access['nomor_penerimaan'] ?: ($access['nomor_submission'] ?: $access['kode_akses']);
     ?>
 
-    <div class="monitor-card">
-        <div class="monitor-head">
+    <div class="mon-card">
+        <div class="mon-header">
             <div>
-                <div class="monitor-code"><?= bersihkan($mainCode) ?></div>
-                <div class="muted-note"><?= bersihkan($access['klien']) ?></div>
+                <div class="mon-title"><?= bersihkan($mainCode) ?> — <?= bersihkan($access['klien']) ?></div>
+                <div class="mon-meta">Submission: <?= bersihkan($access['nomor_submission'] ?? $access['kode_akses']) ?> | Total Sampel: <strong><?= $totalSamples ?></strong></div>
             </div>
             <div>
                 <?php if ($penerimaanId): ?>
@@ -155,34 +147,23 @@ require_once __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <div class="meta-grid">
-            <div class="meta-box">
-                <div class="lbl">No. Submission</div>
-                <div class="val"><?= bersihkan($access['nomor_submission'] ?? $access['kode_akses']) ?></div>
-            </div>
-            <div class="meta-box">
-                <div class="lbl">No. Penerimaan</div>
-                <div class="val"><?= bersihkan($access['nomor_penerimaan'] ?? 'Belum diproses') ?></div>
-            </div>
-            <div class="meta-box">
-                <div class="lbl">Jumlah Sampel</div>
-                <div class="val"><?= $totalSamples ?> sampel</div>
-            </div>
-            <div class="meta-box">
-                <div class="lbl">Progress Uji</div>
-                <div class="val"><?= $doneSamples ?>/<?= $totalSamples ?> selesai</div>
-            </div>
+        <?php
+        $s1 = 'done';
+        $s2 = $penerimaanId ? 'done' : 'active';
+        $s3 = ($penerimaanId && $doneSamples > 0) ? 'done' : ($penerimaanId ? 'active' : 'pending');
+        $s4 = $allDone ? 'done' : 'pending';
+        ?>
+        <div class="stepper">
+            <div class="step <?= $s1 ?>"><div class="step-icon">1</div><div class="step-label">Pengajuan</div></div>
+            <div class="step <?= $s2 ?>"><div class="step-icon">2</div><div class="step-label">Penerimaan</div></div>
+            <div class="step <?= $s3 ?>"><div class="step-icon">3</div><div class="step-label">Pengujian</div></div>
+            <div class="step <?= $s4 ?>"><div class="step-icon">4</div><div class="step-label">Selesai</div></div>
         </div>
 
-        <div class="progress-wrap" title="<?= $progress ?>%">
-            <div class="progress-bar" style="width:<?= $progress ?>%"></div>
-        </div>
-
-        <div class="stage-row">
-            <div class="stage done">1. Pengajuan diterima</div>
-            <div class="stage <?= $penerimaanId ? 'done' : '' ?>">2. Sampel diterima lab</div>
-            <div class="stage <?= $penerimaanId && $doneSamples > 0 ? 'done' : '' ?>">3. Pengujian berjalan</div>
-            <div class="stage <?= $allDone ? 'done' : '' ?>">4. Selesai & invoice</div>
+        <div class="mon-stats">
+            <div class="mon-stat-item">📦 Penerimaan: <span class="mon-stat-val"><?= $penerimaanId ? 'Masuk' : 'Menunggu' ?></span></div>
+            <div class="mon-stat-item">🔬 Pengujian: <span class="mon-stat-val"><?= $doneSamples ?>/<?= $totalSamples ?></span></div>
+            <div class="mon-stat-item">🏁 Progress: <span class="mon-stat-val"><?= $progress ?>%</span></div>
         </div>
 
         <div style="overflow-x:auto">

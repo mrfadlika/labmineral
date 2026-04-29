@@ -437,6 +437,48 @@ function attachClientAccessToPenerimaan($pdo, $submissionId, $penerimaanId) {
     return $stmt->rowCount();
 }
 
+/**
+ * Tutup akses client untuk penerimaan yang sudah selesai.
+ * Aman dipanggil berkali-kali (idempoten).
+ * Return: jumlah baris client_access yang diubah.
+ */
+function cleanupCompletedClientAccounts($pdo, $penerimaanId) {
+    $penerimaanId = (int)$penerimaanId;
+    if ($penerimaanId <= 0) return 0;
+    if (!tableExists($pdo, 'client_access') || !tableExists($pdo, 'sampel')) return 0;
+
+    try {
+        // Penerimaan dianggap selesai jika semua sampel berstatus selesai.
+        $st = $pdo->prepare("
+            SELECT
+                COUNT(*) AS total,
+                SUM(CASE WHEN status = 'selesai' THEN 1 ELSE 0 END) AS done_count
+            FROM sampel
+            WHERE penerimaan_id = ?
+        ");
+        $st->execute([$penerimaanId]);
+        $row = $st->fetch();
+        $total = (int)($row['total'] ?? 0);
+        $done = (int)($row['done_count'] ?? 0);
+
+        if ($total <= 0 || $done < $total) {
+            return 0;
+        }
+
+        $upd = $pdo->prepare("
+            UPDATE client_access
+            SET status = 'selesai'
+            WHERE penerimaan_id = ?
+              AND status = 'aktif'
+        ");
+        $upd->execute([$penerimaanId]);
+        return (int)$upd->rowCount();
+    } catch (Exception $e) {
+        // Jangan ganggu alur utama jika cleanup gagal.
+        return 0;
+    }
+}
+
 function createClientAccountForAccess($pdo, $data) {
     $kodeAkses = $data['kode_akses'] ?? '';
     $klien = $data['klien'] ?? '';
@@ -445,9 +487,11 @@ function createClientAccountForAccess($pdo, $data) {
     $penerimaanId = $data['penerimaan_id'] ?? null;
 
     if (!$klien) return ['created' => false, 'message' => 'Nama klien kosong'];
+    if (!$kodeAkses) return ['created' => false, 'message' => 'Kode akses kosong'];
 
-    // Cek apakah user sudah ada
-    $username = strtolower(str_replace(' ', '.', $klien));
+    // Normalisasi username berbasis nama klien.
+    $baseUsername = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '.', $klien), '.'));
+    $username = $baseUsername ?: 'client';
     $stmt = $pdo->prepare("SELECT id FROM pengguna WHERE username = ?");
     $stmt->execute([$username]);
     $existingUser = $stmt->fetch();
@@ -467,9 +511,28 @@ function createClientAccountForAccess($pdo, $data) {
         $userId = $pdo->lastInsertId();
     }
 
-    // Buat client_access
-    $stmt = $pdo->prepare("INSERT INTO client_access (pengguna_id, submission_id, penerimaan_id, kode_akses, klien, email) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$userId, $submissionId, $penerimaanId, $kodeAkses, $klien, $email]);
+    // Upsert client_access agar tidak duplikat ketika submission diproses ulang.
+    $existingAccess = null;
+    $stAccess = $pdo->prepare("SELECT id FROM client_access WHERE kode_akses = ? LIMIT 1");
+    $stAccess->execute([$kodeAkses]);
+    $existingAccess = $stAccess->fetch();
+    if (!$existingAccess && $submissionId) {
+        $stAccess = $pdo->prepare("SELECT id FROM client_access WHERE submission_id = ? LIMIT 1");
+        $stAccess->execute([$submissionId]);
+        $existingAccess = $stAccess->fetch();
+    }
+
+    if ($existingAccess) {
+        $stmt = $pdo->prepare("
+            UPDATE client_access
+            SET pengguna_id = ?, submission_id = ?, penerimaan_id = ?, kode_akses = ?, klien = ?, email = ?
+            WHERE id = ?
+        ");
+        $stmt->execute([$userId, $submissionId, $penerimaanId, $kodeAkses, $klien, $email, $existingAccess['id']]);
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO client_access (pengguna_id, submission_id, penerimaan_id, kode_akses, klien, email) VALUES (?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$userId, $submissionId, $penerimaanId, $kodeAkses, $klien, $email]);
+    }
 
     return [
         'created' => true,

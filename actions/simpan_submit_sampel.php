@@ -12,14 +12,13 @@ $kontakPerson = trim($_POST['kontak_person'] ?? '');
 $email = trim($_POST['email'] ?? '');
 $telepon = trim($_POST['telepon'] ?? '');
 $alamat = trim($_POST['alamat'] ?? '');
-$poReferensi = trim($_POST['po_referensi'] ?? '');
 $instruksiKhusus = trim($_POST['instruksi_khusus'] ?? '');
 $catatan = trim($_POST['catatan'] ?? '');
 $sampelInput = $_POST['sampel'] ?? [];
 
 // Validasi
-if (!$nomorSubmission || !$klien || !$email) {
-    $_SESSION['msg'] = 'ERROR: Nomor submission, nama klien, dan email wajib diisi.';
+if (!$nomorSubmission || !$klien || !$kontakPerson || !$email || !$telepon || !$alamat) {
+    $_SESSION['msg'] = 'ERROR: Nomor submission, nama klien, kontak person, email, telepon, dan alamat wajib diisi.';
     header('Location: ' . BASE_URL . '/ssf.php');
     exit;
 }
@@ -56,7 +55,7 @@ try {
         $email,
         $telepon,
         $alamat,
-        $poReferensi,
+        '',
         $instruksiKhusus,
         $catatan
     ]);

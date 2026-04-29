@@ -448,8 +448,8 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>Kontak Person</label>
-                        <input type="text" name="kontak_person" class="form-control" placeholder="Nama penanggung jawab">
+                        <label>Kontak Person <span class="required">*</span></label>
+                        <input type="text" name="kontak_person" class="form-control" required placeholder="Nama penanggung jawab">
                     </div>
                     <div class="form-group">
                         <label>Email <span class="required">*</span></label>
@@ -459,18 +459,14 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
 
                 <div class="form-row">
                     <div class="form-group">
-                        <label>No. Telepon</label>
-                        <input type="tel" name="telepon" class="form-control" placeholder="0812-3456-7890">
-                    </div>
-                    <div class="form-group">
-                        <label>No. PO / Referensi</label>
-                        <input type="text" name="po_referensi" class="form-control" placeholder="PO-xxx">
+                        <label>No. Telepon <span class="required">*</span></label>
+                        <input type="tel" name="telepon" class="form-control" required placeholder="0812-3456-7890">
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Alamat Lengkap</label>
-                    <textarea name="alamat" class="form-control" rows="2" placeholder="Jl. ..."></textarea>
+                    <label>Alamat Lengkap <span class="required">*</span></label>
+                    <textarea name="alamat" class="form-control" rows="2" required placeholder="Jl. ..."></textarea>
                 </div>
             </div>
 

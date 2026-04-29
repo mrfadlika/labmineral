@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-//  penerimaan.php — Penerimaan Sampel + Sample Submission Form
+//  penerimaan.php — Penerimaan Sampel
 //  UPDATE: Dapat mengambil data dari submission yang diterima
 // ============================================================
 session_start();
@@ -125,27 +125,32 @@ if ($processSubmission) {
                     
                     $linkedClients = attachClientAccessToPenerimaan($pdo, $processSubmission, (int)$penerimaanId);
                     $clientMsg = '';
-                    if ($linkedClients > 0) {
-                        $clientMsg = ' Akun client dari submission sudah ditautkan ke penerimaan ini.';
-                    } else {
-                        $clientAccount = createClientAccountForAccess($pdo, [
-                            'kode_akses' => $submission['nomor_submission'],
-                            'submission_id' => $processSubmission,
-                            'penerimaan_id' => $penerimaanId,
-                            'klien' => $submission['klien'],
-                            'email' => $submission['email'] ?? '',
-                        ]);
-                        if ($clientAccount['created'] ?? false) {
-                            $waMsg = "Halo {$submission['klien']}, Akun Monitoring LabMineral Anda sudah aktif.\n\nUsername: {$clientAccount['username']}\nPassword: {$clientAccount['password']}\nLink: " . BASE_URL . "/index.php\n\nTerima kasih.";
-                            $waLink = "https://wa.me/" . preg_replace('/[^0-9]/', '', $submission['telepon'] ?? '') . "?text=" . urlencode($waMsg);
-                            
-                            $clientMsg = " Akun client dibuat: <strong>{$clientAccount['username']}</strong> / <strong>{$clientAccount['password']}</strong>. 
-                                         <a href='$waLink' target='_blank' class='btn btn-green btn-sm' style='margin-left:10px;text-decoration:none;display:inline-flex;align-items:center;gap:5px'>
-                                            <span style='font-size:1.1rem'>📲</span> Kirim via WA
-                                         </a>";
-                        } elseif (!empty($clientAccount['message'])) {
-                            $clientMsg = " Akun client belum dibuat: {$clientAccount['message']}";
+                    $clientAccount = createClientAccountForAccess($pdo, [
+                        'kode_akses' => $submission['nomor_submission'],
+                        'submission_id' => $processSubmission,
+                        'penerimaan_id' => $penerimaanId,
+                        'klien' => $submission['klien'],
+                        'email' => $submission['email'] ?? '',
+                    ]);
+                    if ($clientAccount['created'] ?? false) {
+                        $teleponRaw = preg_replace('/[^0-9]/', '', $submission['telepon'] ?? '');
+                        if (substr($teleponRaw, 0, 1) === '0') {
+                            $teleponRaw = '62' . substr($teleponRaw, 1);
                         }
+                        $waMsg = "Halo {$submission['klien']}, Akun Monitoring LabMineral Anda sudah aktif.\n\nUsername: {$clientAccount['username']}\nPassword: {$clientAccount['password']}\nLink Login: " . BASE_URL . "/index.php\n\nTerima kasih.";
+                        $waLink = $teleponRaw ? "https://wa.me/" . $teleponRaw . "?text=" . urlencode($waMsg) : '';
+
+                        $clientMsg = $linkedClients > 0
+                            ? ' Akun client dari submission sudah ditautkan ke penerimaan ini.'
+                            : ' Akun client berhasil dibuat.';
+                        $clientMsg .= " Username: <strong>{$clientAccount['username']}</strong>, Password: <strong>{$clientAccount['password']}</strong>.";
+                        if ($waLink) {
+                            $clientMsg .= " <a href='$waLink' target='_blank' class='btn btn-green btn-sm' style='margin-left:10px;text-decoration:none;display:inline-flex;align-items:center;gap:5px'><span style='font-size:1.1rem'>??</span> Kirim via WA</a>";
+                        } else {
+                            $clientMsg .= " Nomor WhatsApp client belum valid, jadi link kirim WA belum bisa dibuat.";
+                        }
+                    } elseif (!empty($clientAccount['message'])) {
+                        $clientMsg = " Akun client belum dibuat: {$clientAccount['message']}";
                     }
 
                     $_SESSION['msg'] = "✅ Penerimaan $noPenerimaan berhasil dibuat dari submission {$submission['nomor_submission']}. " . count($sampelDetails) . " sampel ditambahkan." . $clientMsg;
@@ -269,35 +274,6 @@ require_once __DIR__ . '/includes/header.php';
 .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
 .tab-pane{display:none;}.tab-pane.active{display:block;}
 
-/* SSF = Sample Submission Form styles */
-.ssf-preview{background:#fff;color:#222;border-radius:8px;padding:32px 36px;font-family:Arial,sans-serif;font-size:10pt;max-width:860px;margin:0 auto;}
-.ssf-kop{display:flex;align-items:center;border-bottom:3px solid #1e4028;padding-bottom:12px;margin-bottom:6px;}
-.ssf-logo{width:64px;height:64px;background:#1e4028;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f0c040;font-weight:900;font-size:9pt;text-align:center;flex-shrink:0;margin-right:14px;line-height:1.3;}
-.ssf-kop h1{font-size:14pt;font-weight:900;color:#1e4028;}
-.ssf-kop p{font-size:8pt;color:#444;margin-top:2px;line-height:1.5;}
-.ssf-divider{height:3px;background:linear-gradient(to right,#1e4028,#f0c040,#1e4028);margin:4px 0 16px;}
-.ssf-title{text-align:center;margin-bottom:16px;}
-.ssf-title h2{font-size:13pt;font-weight:900;text-decoration:underline;letter-spacing:1px;}
-.ssf-title p{font-size:9pt;font-style:italic;color:#555;}
-.ssf-section{margin-bottom:14px;}
-.ssf-section-title{font-size:9pt;font-weight:700;background:#1e4028;color:#f0c040;padding:4px 10px;border-radius:3px;margin-bottom:8px;display:inline-block;}
-.ssf-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;}
-.ssf-field{display:flex;flex-direction:column;margin-bottom:6px;}
-.ssf-field label{font-size:8pt;font-weight:700;color:#333;margin-bottom:2px;}
-.ssf-field .ssf-input{border:none;border-bottom:1px solid #888;padding:4px 2px;font-size:9pt;background:transparent;width:100%;outline:none;color:#222;}
-.ssf-field .ssf-input:focus{border-bottom-color:#1e4028;}
-.ssf-field .ssf-select{border:none;border-bottom:1px solid #888;padding:4px 2px;font-size:9pt;background:transparent;width:100%;outline:none;color:#222;}
-.ssf-tbl{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:6px;}
-.ssf-tbl thead th{background:#1e4028;color:#f0c040;padding:5px 7px;text-align:center;border:1px solid #2e6040;}
-.ssf-tbl tbody td{padding:5px 7px;border:1px solid #bbb;vertical-align:middle;}
-.ssf-tbl tbody td input{border:none;width:100%;background:transparent;font-size:8.5pt;outline:none;padding:2px;}
-.ssf-tbl tbody td select{border:none;width:100%;background:transparent;font-size:8.5pt;outline:none;}
-.ssf-disclaimer{font-size:7.5pt;text-align:justify;line-height:1.6;color:#333;margin-top:12px;border-top:1px solid #ccc;padding-top:8px;}
-.ssf-sign{display:flex;gap:40px;margin-top:16px;}
-.ssf-sign-box .sign-label{font-size:8.5pt;font-weight:700;margin-bottom:40px;}
-.ssf-sign-box .sign-line{border-top:1px solid #333;min-width:160px;padding-top:4px;font-size:8pt;color:#555;}
-.ssf-footer{margin-top:16px;padding-top:8px;border-top:1px solid #ccc;display:flex;justify-content:space-between;font-size:7pt;color:#888;}
-
 /* Submission info card */
 .submission-info-card {
     background: #0d2318;
@@ -325,13 +301,70 @@ require_once __DIR__ . '/includes/header.php';
     color: var(--text);
 }
 
+/* Rapikan tabel daftar penerimaan */
+#tab-daftar .card-title{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+#tab-daftar .data-table th,
+#tab-daftar .data-table td{
+    vertical-align:middle;
+}
+#tab-daftar .data-table th:nth-child(4),
+#tab-daftar .data-table th:nth-child(5),
+#tab-daftar .data-table th:nth-child(6),
+#tab-daftar .data-table td:nth-child(4),
+#tab-daftar .data-table td:nth-child(5),
+#tab-daftar .data-table td:nth-child(6){
+    text-align:center;
+    width:90px;
+}
+#tab-daftar .data-table th:nth-child(7),
+#tab-daftar .data-table td:nth-child(7){
+    width:120px;
+    text-align:center;
+}
+#tab-daftar .data-table th:nth-child(8),
+#tab-daftar .data-table td:nth-child(8){
+    width:170px;
+}
+.aksi-wrap{
+    display:flex;
+    gap:6px;
+    align-items:center;
+}
+.detail-wrap{
+    display:grid;
+    grid-template-columns: 170px 1.2fr 120px 120px 120px;
+    gap:12px;
+    align-items:center;
+    font-size:.75rem;
+    color:var(--text2);
+}
+.detail-row td{
+    background:#08160d;
+    border-top:none !important;
+    padding:8px 10px !important;
+}
+.detail-code{
+    color:var(--text3);
+    font-family:monospace;
+    font-size:.74rem;
+}
+@media (max-width: 980px){
+    .detail-wrap{
+        grid-template-columns: 1fr 1fr;
+        row-gap:8px;
+    }
+}
+
 /* Print */
 @media print{
     .print-bar, .tabs, .sel-card, #tab-daftar, #tab-batch, .sidebar-footer,
     #sidebar, #topbar, .no-print { display:none !important; }
     #main, #content { display:block !important; overflow:visible !important; height:auto !important; }
     body { overflow:visible !important; height:auto !important; }
-    .ssf-preview { padding:10px; }
     @page { size:A4 portrait; margin:12mm 15mm; }
 }
 </style>
@@ -348,7 +381,6 @@ require_once __DIR__ . '/includes/header.php';
 <div class="tabs no-print">
     <button class="tab-btn <?= $tab==='daftar'?'active':'' ?>" onclick="switchTab('daftar',this)">&#128203; Daftar Penerimaan</button>
     <button class="tab-btn <?= $tab==='batch'?'active':'' ?>"  onclick="switchTab('batch',this)">&#10133; Penerimaan Baru</button>
-    <button class="tab-btn <?= $tab==='ssf'?'active':'' ?>"    onclick="switchTab('ssf',this)">&#128196; Sample Submission Form</button>
 </div>
 
 <!-- ══════════════════════════════════════════════════
@@ -402,16 +434,13 @@ require_once __DIR__ . '/includes/header.php';
                         </select>
                     </form>
                 </td>
-                <td style="white-space:nowrap">
-                    <!-- Cetak SSF untuk batch ini -->
-                    <button onclick="cetakSSF('<?= bersihkan($r['nomor_penerimaan']) ?>','<?= bersihkan(addslashes($r['klien'])) ?>','<?= $r['tanggal_terima'] ?>',<?= $r['total_sampel'] ?>)"
-                            class="btn btn-gold btn-sm" style="font-size:.68rem;padding:3px 8px" title="Cetak Sample Submission Form">
-                        &#128196; SSF
-                    </button>
+                <td>
+                    <div class="aksi-wrap">
                     <a href="<?= BASE_URL ?>/exports/export_pdf.php?rec=<?= urlencode($r['nomor_penerimaan']) ?>&cetak=1"
                        target="_blank" class="btn btn-red btn-sm" style="font-size:.68rem;padding:3px 8px" title="Export PDF Laporan">
                         &#128196; PDF
                     </a>
+                    </div>
                 </td>
             </tr>
             <!-- Detail sampel dalam batch -->
@@ -423,13 +452,16 @@ require_once __DIR__ . '/includes/header.php';
             $sbList->execute([$r['id']]);
             $sbs = $sbList->fetchAll();
             foreach ($sbs as $sb): ?>
-            <tr style="background:#0a1a0f">
-                <td style="padding-left:28px;color:var(--text3);font-size:.75rem">&#9492; <?= bersihkan($sb['kode_sampel']) ?></td>
-                <td colspan="2" style="font-size:.75rem;color:var(--text2)"><?= bersihkan($sb['jenis_material']) ?></td>
-                <td style="font-size:.75rem;color:var(--text2)"><?= $sb['berat_gram'] ? number_format($sb['berat_gram'],2).' g' : '—' ?></td>
-                <td style="font-size:.75rem;color:var(--text2)"><?= bersihkan($sb['metode_uji']) ?></td>
-                <td style="font-size:.75rem;color:var(--text2)"><?= badgeStatus($sb['status']) ?></td>
-                <td></td>
+            <tr class="detail-row">
+                <td colspan="8">
+                    <div class="detail-wrap">
+                        <div class="detail-code">&#9492; <?= bersihkan($sb['kode_sampel']) ?></div>
+                        <div><?= bersihkan($sb['jenis_material']) ?></div>
+                        <div><?= $sb['berat_gram'] ? number_format($sb['berat_gram'],2).' g' : '-' ?></div>
+                        <div><?= bersihkan($sb['metode_uji']) ?></div>
+                        <div><?= badgeStatus($sb['status']) ?></div>
+                    </div>
+                </td>
             </tr>
             <?php endforeach; ?>
             <?php endforeach; ?>
@@ -551,43 +583,6 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════
-     TAB 3 — SAMPLE SUBMISSION FORM
-══════════════════════════════════════════════════ -->
-<div id="tab-ssf" class="tab-pane <?= $tab==='ssf'?'active':'' ?>">
-
-    <!-- Panel konfigurasi SSF -->
-    <div class="card no-print" style="margin-bottom:16px">
-        <div class="card-title">&#9881; Konfigurasi Sample Submission Form</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-            <div class="form-group">
-                <label>Nama Klien (opsional)</label>
-                <input id="ssfKlien" placeholder="Kosongkan untuk form kosong" list="klienSuggestSSF"/>
-                <datalist id="klienSuggestSSF">
-                    <?php foreach ($klienAll as $k): ?><option value="<?= bersihkan($k) ?>"><?php endforeach; ?>
-                </datalist>
-            </div>
-            <div class="form-group">
-                <label>Jumlah Baris Sampel</label>
-                <select id="ssfJumlah">
-                    <?php for ($i=1;$i<=10;$i++): ?><option value="<?= $i ?>" <?= $i==5?'selected':'' ?>><?= $i ?> sampel</option><?php endfor; ?>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Tanggal Form</label>
-                <input type="date" id="ssfTanggal" value="<?= date('Y-m-d') ?>"/>
-            </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:12px">
-            <button class="btn btn-green" onclick="generateSSF()">&#128065; Preview Form</button>
-            <button class="btn btn-gold" onclick="window.print()">&#128196; Cetak / Simpan PDF</button>
-        </div>
-    </div>
-
-    <!-- Preview SSF -->
-    <div id="ssfPreview"></div>
-</div>
-
 <script>
 // ── TAB SWITCH ────────────────────────────────────────────────
 function switchTab(name, el) {
@@ -661,109 +656,5 @@ document.addEventListener('DOMContentLoaded', function() {
     <?php endif; ?>
 });
 
-// ── SAMPLE SUBMISSION FORM GENERATOR ────────────────────────────────────────
-function generateSSF(noRec, klienPre, tglPre, jmlPre) {
-    const klien  = klienPre  || document.getElementById('ssfKlien')?.value   || '';
-    const jumlah = jmlPre    || parseInt(document.getElementById('ssfJumlah')?.value || 5);
-    const tgl    = tglPre    || document.getElementById('ssfTanggal')?.value  || '';
-    const noForm = noRec     || 'SSF-' + Date.now().toString().slice(-6);
-
-    const matSelectOpts = <?= json_encode($materialOpts) ?>.map(m => `<option>${m}</option>`).join('');
-    const metSelectOpts = <?= json_encode($metodeOpts) ?>.map(m => `<option>${m}</option>`).join('');
-
-    let rows = '';
-    for (let i = 1; i <= jumlah; i++) {
-        rows += `<tr>
-            <td style="text-align:center;font-weight:700">${i}</td>
-            <td><input class="ssf-input-cell" placeholder="Kode sampel" style="width:100%;border:none;background:transparent;font-size:8.5pt;outline:none;padding:2px"/></td>
-            <td>
-                <select style="width:100%;border:none;background:transparent;font-size:8.5pt;outline:none">
-                    <option value="">— Pilih —</option>
-                    ${matSelectOpts}
-                </select>
-            </td>
-            <td><input placeholder="gram" style="width:100%;border:none;background:transparent;font-size:8.5pt;outline:none;text-align:center"/></td>
-            <td>
-                <select style="width:100%;border:none;background:transparent;font-size:8.5pt;outline:none">
-                    <option value="">— Pilih —</option>
-                    ${metSelectOpts}
-                </select>
-            </td>
-            <td><input placeholder="Keterangan" style="width:100%;border:none;background:transparent;font-size:8.5pt;outline:none"/></td>
-         </tr>`;
-    }
-
-    const tglFmt = tgl ? new Date(tgl).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}) : '___________________';
-
-    const html = `
-    <div class="ssf-preview" id="ssfDoc">
-        <div class="ssf-kop">
-            <div class="ssf-logo">&#9879;<br>LAB<br>MINERAL</div>
-            <div>
-                <h1>LABMINERAL PRO</h1>
-                <p>Laboratorium Uji Mineral &amp; Logam<br>
-                Jl. Tamalanrea Raya, Makassar 90245, Sulawesi Selatan<br>
-                Telp/Fax. +62 411 000-0000 &nbsp;|&nbsp; Email: lab@labmineral.co.id</p>
-            </div>
-        </div>
-        <div class="ssf-divider"></div>
-        <div class="ssf-title">
-            <h2>SAMPLE SUBMISSION FORM</h2>
-            <p>(Formulir Pengiriman Sampel)</p>
-        </div>
-        <div style="display:flex;justify-content:space-between;font-size:8.5pt;color:#666;margin-bottom:14px">
-            <span>No. Form: <strong style="color:#1e4028">${noForm}</strong></span>
-            <span>Tanggal: <strong>${tglFmt}</strong></span>
-        </div>
-        <div class="ssf-section">
-            <div class="ssf-section-title">A. Informasi Klien / Customer Information</div>
-            <div class="ssf-grid">
-                <div class="ssf-field"><label>Nama Perusahaan / Company Name</label><input class="ssf-input" value="${klien}" placeholder="________________________________"/></div>
-                <div class="ssf-field"><label>Nama Kontak / Contact Person</label><input class="ssf-input" placeholder="________________________________"/></div>
-                <div class="ssf-field"><label>Alamat / Address</label><input class="ssf-input" placeholder="________________________________"/></div>
-                <div class="ssf-field"><label>No. Telepon / Phone</label><input class="ssf-input" placeholder="________________________________"/></div>
-                <div class="ssf-field"><label>Email</label><input class="ssf-input" placeholder="________________________________"/></div>
-                <div class="ssf-field"><label>No. PO / Referensi</label><input class="ssf-input" placeholder="________________________________"/></div>
-            </div>
-        </div>
-        <div class="ssf-section">
-            <div class="ssf-section-title">B. Detail Pengiriman / Submission Details</div>
-            <div class="ssf-grid">
-                <div class="ssf-field"><label>Tanggal Pengiriman / Date of Submission</label><input class="ssf-input" type="date" value="${tgl}"/></div>
-                <div class="ssf-field"><label>Bentuk Sampel / Form of Sample</label><select class="ssf-select"><option>Pulp</option><option>Rock</option><option>Soil</option><option>Core</option><option>Sludge</option><option>Lainnya</option></select></div>
-                <div class="ssf-field"><label>Jumlah Sampel / Number of Samples</label><input class="ssf-input" value="${jumlah}" type="number"/></div>
-                <div class="ssf-field"><label>Instruksi Khusus / Special Instructions</label><input class="ssf-input" placeholder="________________________________"/></div>
-            </div>
-        </div>
-        <div class="ssf-section">
-            <div class="ssf-section-title">C. Daftar Sampel / List of Samples</div>
-            <table class="ssf-tbl">
-                <thead><tr><th width="30">No</th><th>Kode Sampel / Sample ID</th><th>Material</th><th>Berat (g)</th><th>Metode</th><th>Keterangan</th></tr></thead>
-                <tbody>${rows}</tbody>
-            </table>
-        </div>
-        <div class="ssf-disclaimer">
-            <strong>PERNYATAAN / DECLARATION:</strong> Saya yang bertanda tangan di bawah ini menyatakan bahwa sampel yang diserahkan adalah benar.
-        </div>
-        <div class="ssf-sign">
-            <div class="ssf-sign-box">
-                <div class="sign-label">Diserahkan oleh / Submitted by</div>
-                <div class="sign-line">Nama: ___________________</div>
-            </div>
-            <div class="ssf-sign-box" style="margin-left:auto">
-                <div class="sign-label">Diterima oleh / Received by</div>
-                <div class="sign-line">Nama: ___________________</div>
-            </div>
-        </div>
-    </div>`;
-    document.getElementById('ssfPreview').innerHTML = html;
-}
-
-function cetakSSF(noRec, klien, tgl, jml) {
-    switchTab('ssf');
-    generateSSF(noRec, klien, tgl, jml);
-    setTimeout(() => window.print(), 500);
-}
 </script>
-
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

@@ -30,12 +30,46 @@ if (!$id || !in_array($status, $allowedStatus)) {
 }
 
 try {
+    $credentialPayload = null;
+
+    if ($status === 'diterima') {
+        $subStmt = $pdo->prepare("SELECT * FROM submission_sampel WHERE id = ? LIMIT 1");
+        $subStmt->execute([$id]);
+        $submission = $subStmt->fetch();
+        if (!$submission) {
+            echo json_encode(['success' => false, 'message' => 'Submission tidak ditemukan.']);
+            exit;
+        }
+
+        $clientAccount = createClientAccountForAccess($pdo, [
+            'kode_akses' => $submission['nomor_submission'] ?? '',
+            'submission_id' => $id,
+            'klien' => $submission['klien'] ?? '',
+            'email' => $submission['email'] ?? '',
+        ]);
+
+        if (!($clientAccount['created'] ?? false)) {
+            $msg = $clientAccount['message'] ?? 'Akun client gagal dibuat.';
+            echo json_encode(['success' => false, 'message' => $msg]);
+            exit;
+        }
+
+        $credentialPayload = [
+            'username' => $clientAccount['username'] ?? '',
+            'password' => $clientAccount['password'] ?? '',
+        ];
+    }
+
     // Update status
     $stmt = $pdo->prepare("UPDATE submission_sampel SET status = ? WHERE id = ?");
     $stmt->execute([$status, $id]);
     
     if ($stmt->rowCount() > 0) {
-        echo json_encode(['success' => true, 'message' => 'Status updated successfully.']);
+        echo json_encode([
+            'success' => true,
+            'message' => 'Status updated successfully.',
+            'credentials' => $credentialPayload
+        ]);
     } else {
         echo json_encode(['success' => false, 'message' => 'No changes made or submission not found.']);
     }

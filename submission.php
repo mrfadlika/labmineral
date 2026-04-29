@@ -113,9 +113,18 @@ function toggleSubmission(id) {
 
 function updateStatus(submissionId, status) {
     if (status === 'diterima') {
-        if (confirm('Terima submission ini dan proses ke penerimaan?')) {
-            // Langsung redirect ke penerimaan dengan proses
-            window.location.href = '<?= BASE_URL ?>/penerimaan.php?process_submission=' + submissionId;
+        if (confirm('Terima submission ini? Akun client akan disiapkan lalu bisa dikirim via WhatsApp.')) {
+            fetch('<?= BASE_URL ?>/actions/update_submission_status.php', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'id=' + submissionId + '&status=' + status
+            }).then(response => response.json()).then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Gagal mengubah status: ' + data.message);
+                }
+            });
         }
     } else if (status === 'ditolak') {
         if (confirm('Tolak submission ini?')) {
@@ -144,6 +153,21 @@ function renderSubmissionList($submissions) {
     }
     
     foreach ($submissions as $sub) {
+        $cred = null;
+        if ($sub['status'] === 'diterima') {
+            $credStmt = $pdo->prepare("
+                SELECT p.username, s.telepon
+                FROM client_access ca
+                JOIN pengguna p ON p.id = ca.pengguna_id
+                JOIN submission_sampel s ON s.id = ca.submission_id
+                WHERE ca.submission_id = ?
+                ORDER BY ca.id DESC
+                LIMIT 1
+            ");
+            $credStmt->execute([$sub['id']]);
+            $cred = $credStmt->fetch();
+        }
+
         // Ambil detail sampel
         $detailStmt = $pdo->prepare("SELECT * FROM submission_sampel_detail WHERE submission_id = ?");
         $detailStmt->execute([$sub['id']]);
@@ -195,15 +219,41 @@ function renderSubmissionList($submissions) {
                 <div style="margin-top:12px"><strong>Catatan:</strong> <?= nl2br(bersihkan($sub['catatan'])) ?></div>
                 <?php endif; ?>
                 
+                <?php if ($sub['status'] === 'diterima'): ?>
+                <div style="margin-top:12px;padding:10px 12px;border:1px dashed var(--gold);border-radius:8px;background:rgba(240,192,64,.08)">
+                    <div style="font-size:.72rem;color:var(--text3);margin-bottom:6px">Akun Monitoring Client</div>
+                    <?php if ($cred): ?>
+                        <?php
+                        $waPhone = preg_replace('/[^0-9]/', '', (string)($cred['telepon'] ?? ''));
+                        if (substr($waPhone, 0, 1) === '0') {
+                            $waPhone = '62' . substr($waPhone, 1);
+                        }
+                        $loginUrl = BASE_URL . '/index.php';
+                        $waText = "Halo {$sub['klien']}, akun monitoring sampel Anda sudah aktif.\n\nUsername: {$cred['username']}\nPassword: client123\nLink Login: {$loginUrl}\n\nSilakan login untuk memantau progres sampel.";
+                        $waLink = $waPhone ? ('https://wa.me/' . $waPhone . '?text=' . urlencode($waText)) : '';
+                        ?>
+                        <div><strong>Username:</strong> <?= bersihkan($cred['username']) ?></div>
+                        <div><strong>Password:</strong> <code>client123</code></div>
+                        <?php if ($waLink): ?>
+                            <div style="margin-top:8px">
+                                <a href="<?= $waLink ?>" target="_blank" class="btn btn-green btn-sm">Kirim Username/Password ke WhatsApp</a>
+                            </div>
+                        <?php else: ?>
+                            <div style="margin-top:8px;color:var(--yellow)">Nomor WhatsApp client belum valid.</div>
+                        <?php endif; ?>
+                    <?php else: ?>
+                        <div style="color:var(--yellow)">Akun client belum ditemukan. Klik refresh atau cek data client_access.</div>
+                    <?php endif; ?>
+                </div>
+                <?php endif; ?>
+
                 <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">
                     <?php if ($sub['status'] === 'pending'): ?>
-						<a href="<?= BASE_URL ?>/penerimaan.php?process_submission=<?= $sub['id'] ?>" 
-                           onclick="return confirm('Terima submission ini dan proses ke penerimaan?')"
-                           class="btn btn-green btn-sm">✅ Terima</a>
-						<button onclick="updateStatus(<?= $sub['id'] ?>, 'ditolak')" class="btn btn-red btn-sm">❌ Tolak</button>
-					<?php elseif ($sub['status'] === 'diterima'): ?>
-						<button onclick="location.href='<?= BASE_URL ?>/penerimaan.php?process_submission=<?= $sub['id'] ?>'" class="btn btn-gold btn-sm">📦 Proses ke Penerimaan</button>
-					<?php endif; ?>
+                        <button onclick="updateStatus(<?= $sub['id'] ?>, 'diterima')" class="btn btn-green btn-sm">Terima</button>
+                        <button onclick="updateStatus(<?= $sub['id'] ?>, 'ditolak')" class="btn btn-red btn-sm">Tolak</button>
+                    <?php elseif ($sub['status'] === 'diterima'): ?>
+                        <button onclick="location.href='<?= BASE_URL ?>/penerimaan.php?process_submission=<?= $sub['id'] ?>'" class="btn btn-gold btn-sm">Proses ke Penerimaan</button>
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
