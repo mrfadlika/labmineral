@@ -22,21 +22,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['nama']    = $user['nama'];
             $_SESSION['role']    = $user['role'];
-<<<<<<< HEAD
             $_SESSION['user_role'] = $user['role'];
+            
             // Log aktivitas
             $pdo->prepare("INSERT INTO log_aktivitas (pengguna_id, aksi, modul) VALUES (?, 'Login', 'auth')")
                 ->execute([$user['id']]);
+            
             $redirect = normalizeRole($user['role']) === 'client'
                 ? BASE_URL . '/client_monitoring.php'
                 : BASE_URL . '/dashboard.php';
             header('Location: ' . $redirect);
-=======
-            // Log aktivitas
-            $pdo->prepare("INSERT INTO log_aktivitas (pengguna_id, aksi, modul) VALUES (?, 'Login', 'auth')")
-                ->execute([$user['id']]);
-            header('Location: ' . BASE_URL . '/dashboard.php');
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
             exit;
         } else {
             $error = 'Username atau password salah.';

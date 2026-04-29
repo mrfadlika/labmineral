@@ -9,9 +9,6 @@ define('DB_PASS',     '');
 define('DB_NAME',     'labmineral');
 define('APP_NAME',    'LabMineral Pro');
 define('APP_VERSION', '2.0.0');
-<<<<<<< HEAD
-define('BASE_URL',    '/labmineral-main');
-=======
 
 // Turunkan base URL dari folder project agar asset tetap terbaca meski nama folder berubah.
 $projectRoot = realpath(dirname(__DIR__));
@@ -29,7 +26,6 @@ if ($projectRoot && $documentRoot) {
 }
 
 define('BASE_URL', $baseUrl);
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 
 // ── Koneksi PDO ──────────────────────────────────────────────
 $pdo = null;
@@ -48,17 +44,12 @@ try {
 
 // ── Cek login ────────────────────────────────────────────────
 function cekLogin() {
-<<<<<<< HEAD
     global $pdo;
-
-=======
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     if (session_status() === PHP_SESSION_NONE) session_start();
     if (empty($_SESSION['user_id'])) {
         header('Location: '.BASE_URL.'/index.php'); 
         exit;
     }
-<<<<<<< HEAD
 
     if ($pdo instanceof PDO) {
         try {
@@ -89,8 +80,6 @@ function cekLogin() {
         header('Location: '.BASE_URL.'/client_monitoring.php');
         exit;
     }
-=======
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 }
 
 // ── Sanitasi ─────────────────────────────────────────────────
@@ -102,7 +91,6 @@ function bersihkan($s) {
 // ROLE HELPER FUNCTIONS (terintegrasi dengan session)
 // ============================================================
 
-<<<<<<< HEAD
 function normalizeRole($role) {
     return $role === 'klien' ? 'client' : $role;
 }
@@ -117,29 +105,12 @@ function currentUserRole() {
  */
 function hasRole($role) {
     $userRole = currentUserRole();
-
     if (!$userRole) return false;
 
     if (is_array($role)) {
-        return in_array($userRole, array_map('normalizeRole', $role), true);
+        return in_array($userRole, array_map('normalizeRole', (array)$role), true);
     }
     return $userRole === normalizeRole($role);
-=======
-/**
- * Cek apakah user memiliki role tertentu
- * Mendukung kedua format session: user_role dan role
- */
-function hasRole($role) {
-    // Cek kedua format session
-    $userRole = $_SESSION['user_role'] ?? $_SESSION['role'] ?? null;
-    
-    if (!$userRole) return false;
-    
-    if (is_array($role)) {
-        return in_array($userRole, $role);
-    }
-    return $userRole === $role;
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 }
 
 /**
@@ -162,34 +133,25 @@ function isAnalis() {
 function isSupervisor() {
     return hasRole('supervisor');
 }
-<<<<<<< HEAD
 
 /**
- * Cek apakah user adalah client/klien.
+ * Cek apakah user adalah client
  */
 function isClient() {
     return hasRole('client');
 }
 
-=======
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 /**
  * Tampilkan badge role dengan warna berbeda
  */
 function roleBadge($role) {
-<<<<<<< HEAD
     $role = normalizeRole($role);
-=======
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     $colors = [
         'admin' => '#e74c3c',
         'analis' => '#2ecc71',
         'supervisor' => '#f39c12',
-<<<<<<< HEAD
-        'client' => '#3498db'
-=======
+        'client' => '#9b59b6',
         'klien' => '#3498db'
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     ];
     $color = $colors[$role] ?? '#95a5a6';
     return "<span style='background:$color;color:white;padding:2px 8px;border-radius:12px;font-size:.65rem;display:inline-block;'>" . strtoupper($role) . "</span>";
@@ -344,7 +306,6 @@ function canAccessDashboard() {
 }
 
 /**
-<<<<<<< HEAD
  * Monitoring client
  */
 function canAccessClientMonitoring() {
@@ -352,8 +313,6 @@ function canAccessClientMonitoring() {
 }
 
 /**
-=======
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
  * Manajemen Pengguna - hanya admin
  */
 function canAccessPengguna() {
@@ -364,253 +323,6 @@ function canAccessPengguna() {
 // END OF ROLE HELPER FUNCTIONS
 // ============================================================
 
-<<<<<<< HEAD
-function tableExists(PDO $pdo, string $table): bool {
-    $stmt = $pdo->prepare(
-        "SELECT COUNT(*) FROM information_schema.TABLES
-         WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ?"
-    );
-    $stmt->execute([$table]);
-    return (int)$stmt->fetchColumn() > 0;
-}
-
-function clientAccessTableReady(PDO $pdo): bool {
-    return tableExists($pdo, 'client_access');
-}
-
-function penggunaRoleValues(PDO $pdo): array {
-    $stmt = $pdo->query("SHOW COLUMNS FROM pengguna LIKE 'role'");
-    $col = $stmt->fetch();
-    if (!$col || empty($col['Type'])) return [];
-
-    preg_match_all("/'([^']+)'/", $col['Type'], $matches);
-    return $matches[1] ?? [];
-}
-
-function preferredClientRole(PDO $pdo): string {
-    $roles = penggunaRoleValues($pdo);
-    if (in_array('client', $roles, true)) return 'client';
-    if (in_array('klien', $roles, true)) return 'klien';
-    return 'client';
-}
-
-function generateClientPassword(int $length = 10): string {
-    $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789';
-    $password = '';
-    $max = strlen($chars) - 1;
-    for ($i = 0; $i < $length; $i++) {
-        $password .= $chars[random_int(0, $max)];
-    }
-    return $password;
-}
-
-function generateClientUsername(PDO $pdo, string $code): string {
-    $base = strtolower(preg_replace('/[^a-zA-Z0-9]+/', '', $code));
-    $base = $base ?: (string)time();
-    $base = 'client_' . substr($base, 0, 34);
-    $username = $base;
-    $i = 1;
-
-    $stmt = $pdo->prepare("SELECT COUNT(*) FROM pengguna WHERE username = ?");
-    while (true) {
-        $stmt->execute([$username]);
-        if ((int)$stmt->fetchColumn() === 0) return $username;
-        $username = substr($base, 0, 38) . $i;
-        $i++;
-    }
-}
-
-function createClientAccountForAccess(PDO $pdo, array $data): array {
-    if (!clientAccessTableReady($pdo)) {
-        return [
-            'created' => false,
-            'message' => 'Tabel client_access belum tersedia. Jalankan scripts/sql/patch_client_role.sql.',
-        ];
-    }
-
-    $code = trim($data['kode_akses'] ?? $data['nomor'] ?? '');
-    if ($code === '') $code = 'CLIENT-' . date('ymdHis');
-
-    try {
-        $ownTransaction = !$pdo->inTransaction();
-        if ($ownTransaction) $pdo->beginTransaction();
-
-        $username = generateClientUsername($pdo, $code);
-        $password = generateClientPassword();
-        $hash = password_hash($password, PASSWORD_BCRYPT);
-        $role = preferredClientRole($pdo);
-        $klien = trim($data['klien'] ?? 'Client');
-        $email = trim($data['email'] ?? '');
-
-        $stmtUser = $pdo->prepare(
-            "INSERT INTO pengguna (nama, username, password, email, role, status)
-             VALUES (?, ?, ?, ?, ?, 'aktif')"
-        );
-        $stmtUser->execute([$klien . ' - ' . $code, $username, $hash, $email, $role]);
-        $penggunaId = (int)$pdo->lastInsertId();
-
-        $stmtAccess = $pdo->prepare(
-            "INSERT INTO client_access
-             (pengguna_id, submission_id, penerimaan_id, kode_akses, klien, email, status)
-             VALUES (?, ?, ?, ?, ?, ?, 'aktif')"
-        );
-        $stmtAccess->execute([
-            $penggunaId,
-            !empty($data['submission_id']) ? (int)$data['submission_id'] : null,
-            !empty($data['penerimaan_id']) ? (int)$data['penerimaan_id'] : null,
-            $code,
-            $klien,
-            $email,
-        ]);
-
-        if ($ownTransaction) $pdo->commit();
-
-        return [
-            'created' => true,
-            'user_id' => $penggunaId,
-            'username' => $username,
-            'password' => $password,
-            'kode_akses' => $code,
-        ];
-    } catch (Exception $e) {
-        if (!empty($ownTransaction) && $pdo->inTransaction()) $pdo->rollBack();
-        return ['created' => false, 'message' => $e->getMessage()];
-    }
-}
-
-function attachClientAccessToPenerimaan(PDO $pdo, int $submissionId, int $penerimaanId): int {
-    if (!clientAccessTableReady($pdo) || !$submissionId || !$penerimaanId) return 0;
-
-    $stmt = $pdo->prepare(
-        "UPDATE client_access
-         SET penerimaan_id = ?, status = 'aktif'
-         WHERE submission_id = ? AND penerimaan_id IS NULL"
-    );
-    $stmt->execute([$penerimaanId, $submissionId]);
-    return $stmt->rowCount();
-}
-
-function clientCanAccessInvoice(PDO $pdo, int $invoiceId, int $penggunaId): bool {
-    if (!clientAccessTableReady($pdo)) return false;
-
-    $stmt = $pdo->prepare(
-        "SELECT COUNT(*)
-         FROM invoice i
-         JOIN client_access ca ON ca.penerimaan_id = i.penerimaan_id
-         WHERE i.id = ? AND ca.pengguna_id = ?"
-    );
-    $stmt->execute([$invoiceId, $penggunaId]);
-    return (int)$stmt->fetchColumn() > 0;
-}
-
-function syncPenerimaanCompletion(PDO $pdo, ?int $penerimaanId): bool {
-    if (!$penerimaanId) return false;
-
-    $stmt = $pdo->prepare(
-        "SELECT COUNT(*) AS total,
-                SUM(CASE WHEN status = 'selesai' THEN 1 ELSE 0 END) AS selesai
-         FROM sampel
-         WHERE penerimaan_id = ?"
-    );
-    $stmt->execute([$penerimaanId]);
-    $row = $stmt->fetch();
-    $total = (int)($row['total'] ?? 0);
-    $selesai = (int)($row['selesai'] ?? 0);
-
-    if ($total > 0 && $total === $selesai) {
-        $pdo->prepare("UPDATE penerimaan_sampel SET status='selesai' WHERE id=?")
-            ->execute([$penerimaanId]);
-        return true;
-    }
-
-    return false;
-}
-
-function cleanupCompletedClientAccounts(PDO $pdo, ?int $penerimaanId = null): int {
-    if (!clientAccessTableReady($pdo)) return 0;
-
-    $params = [];
-    $filter = '';
-    if ($penerimaanId) {
-        $filter = ' AND ca.penerimaan_id = ?';
-        $params[] = $penerimaanId;
-    }
-
-    $sql = "
-        SELECT DISTINCT u.id
-        FROM pengguna u
-        JOIN client_access ca ON ca.pengguna_id = u.id
-        WHERE u.role IN ('client','klien')
-          $filter
-          AND EXISTS (
-              SELECT 1
-              FROM client_access ca_done
-              JOIN penerimaan_sampel p_done ON p_done.id = ca_done.penerimaan_id
-              WHERE ca_done.pengguna_id = u.id
-                AND p_done.status = 'selesai'
-                AND NOT EXISTS (
-                    SELECT 1 FROM sampel s_done
-                    WHERE s_done.penerimaan_id = p_done.id
-                      AND s_done.status <> 'selesai'
-                )
-                AND EXISTS (
-                    SELECT 1 FROM invoice i_done
-                    WHERE i_done.penerimaan_id = p_done.id
-                      AND i_done.status = 'lunas'
-                )
-          )
-          AND NOT EXISTS (
-              SELECT 1
-              FROM client_access ca_open
-              LEFT JOIN penerimaan_sampel p_open ON p_open.id = ca_open.penerimaan_id
-              WHERE ca_open.pengguna_id = u.id
-                AND (
-                    ca_open.penerimaan_id IS NULL
-                    OR p_open.status <> 'selesai'
-                    OR EXISTS (
-                        SELECT 1 FROM sampel s_open
-                        WHERE s_open.penerimaan_id = p_open.id
-                          AND s_open.status <> 'selesai'
-                    )
-                    OR NOT EXISTS (
-                        SELECT 1 FROM invoice i_open
-                        WHERE i_open.penerimaan_id = p_open.id
-                          AND i_open.status = 'lunas'
-                    )
-                )
-          )
-    ";
-
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
-    $userIds = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN));
-
-    if (!$userIds) return 0;
-
-    $deleted = 0;
-    try {
-        $pdo->beginTransaction();
-        $stLog = $pdo->prepare("UPDATE log_aktivitas SET pengguna_id = NULL WHERE pengguna_id = ?");
-        $stAccess = $pdo->prepare("DELETE FROM client_access WHERE pengguna_id = ?");
-        $stUser = $pdo->prepare("DELETE FROM pengguna WHERE id = ? AND role IN ('client','klien')");
-
-        foreach ($userIds as $userId) {
-            $stLog->execute([$userId]);
-            $stAccess->execute([$userId]);
-            $stUser->execute([$userId]);
-            $deleted += $stUser->rowCount();
-        }
-        $pdo->commit();
-    } catch (Exception $e) {
-        if ($pdo->inTransaction()) $pdo->rollBack();
-        error_log('cleanupCompletedClientAccounts failed: ' . $e->getMessage());
-    }
-
-    return $deleted;
-}
-
-=======
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 // ── STATUS BAHAN — SATU SUMBER KEBENARAN ─────────────────────
 function statusBahan($stok, $min) {
     $stok = (float)$stok;
@@ -685,10 +397,7 @@ function badgeStatus($s) {
         'analis'      => ['st-gold', 'Analis'],
         'supervisor'  => ['st-warn', 'Supervisor'],
         'klien'       => ['st-blue', 'Klien'],
-<<<<<<< HEAD
         'client'      => ['st-blue', 'Client'],
-=======
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
         'diterima'    => ['st-blue', 'Diterima'],
         'diproses'    => ['st-warn', 'Diproses'],
         'draft'       => ['st-warn', 'Draft'],
@@ -705,4 +414,67 @@ function generateCertNum($noRec = null, $klien = '', $tgl = '') {
     if ($noRec) return $noRec;
     $seed = $klien . $tgl;
     return 'LAB-' . date('Ym') . '-' . strtoupper(substr(md5($seed), 0, 4));
+}
+
+// ── UTILITY FUNCTIONS UNTUK CLIENT ACCOUNT ──────────────────────
+function tableExists($pdo, $table) {
+    try {
+        $result = $pdo->query("SELECT 1 FROM $table LIMIT 1");
+    } catch (Exception $e) {
+        return false;
+    }
+    return $result !== false;
+}
+
+function clientAccessTableReady($pdo) {
+    return tableExists($pdo, 'client_access');
+}
+
+function attachClientAccessToPenerimaan($pdo, $submissionId, $penerimaanId) {
+    if (!$submissionId) return 0;
+    $stmt = $pdo->prepare("UPDATE client_access SET penerimaan_id = ?, status = 'aktif' WHERE submission_id = ?");
+    $stmt->execute([$penerimaanId, $submissionId]);
+    return $stmt->rowCount();
+}
+
+function createClientAccountForAccess($pdo, $data) {
+    $kodeAkses = $data['kode_akses'] ?? '';
+    $klien = $data['klien'] ?? '';
+    $email = $data['email'] ?? '';
+    $submissionId = $data['submission_id'] ?? null;
+    $penerimaanId = $data['penerimaan_id'] ?? null;
+
+    if (!$klien) return ['created' => false, 'message' => 'Nama klien kosong'];
+
+    // Cek apakah user sudah ada
+    $username = strtolower(str_replace(' ', '.', $klien));
+    $stmt = $pdo->prepare("SELECT id FROM pengguna WHERE username = ?");
+    $stmt->execute([$username]);
+    $existingUser = $stmt->fetch();
+
+    $userId = null;
+    $passwordPlain = 'client123'; // Default password
+
+    if ($existingUser) {
+        $userId = $existingUser['id'];
+        // Update role jika perlu
+        $pdo->prepare("UPDATE pengguna SET role = 'client' WHERE id = ?")->execute([$userId]);
+    } else {
+        // Buat user baru
+        $passwordHash = password_hash($passwordPlain, PASSWORD_DEFAULT);
+        $stmt = $pdo->prepare("INSERT INTO pengguna (nama, username, password, email, role, status) VALUES (?, ?, ?, ?, 'client', 'aktif')");
+        $stmt->execute([$klien, $username, $passwordHash, $email]);
+        $userId = $pdo->lastInsertId();
+    }
+
+    // Buat client_access
+    $stmt = $pdo->prepare("INSERT INTO client_access (pengguna_id, submission_id, penerimaan_id, kode_akses, klien, email) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$userId, $submissionId, $penerimaanId, $kodeAkses, $klien, $email]);
+
+    return [
+        'created' => true,
+        'username' => $username,
+        'password' => $passwordPlain,
+        'user_id' => $userId
+    ];
 }

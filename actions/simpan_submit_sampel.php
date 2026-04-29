@@ -20,13 +20,13 @@ $sampelInput = $_POST['sampel'] ?? [];
 // Validasi
 if (!$nomorSubmission || !$klien || !$email) {
     $_SESSION['msg'] = 'ERROR: Nomor submission, nama klien, dan email wajib diisi.';
-    header('Location: ' . BASE_URL . '/submit_sampel.php');
+    header('Location: ' . BASE_URL . '/ssf.php');
     exit;
 }
 
 if (empty($sampelInput)) {
     $_SESSION['msg'] = 'ERROR: Minimal 1 sampel harus diisi.';
-    header('Location: ' . BASE_URL . '/submit_sampel.php');
+    header('Location: ' . BASE_URL . '/ssf.php');
     exit;
 }
 
@@ -35,7 +35,7 @@ $cek = $pdo->prepare("SELECT id FROM submission_sampel WHERE nomor_submission = 
 $cek->execute([$nomorSubmission]);
 if ($cek->fetch()) {
     $_SESSION['msg'] = "ERROR: Nomor submission $nomorSubmission sudah ada.";
-    header('Location: ' . BASE_URL . '/submit_sampel.php');
+    header('Location: ' . BASE_URL . '/ssf.php');
     exit;
 }
 
@@ -81,7 +81,6 @@ try {
     }
     
     $pdo->commit();
-<<<<<<< HEAD
 
     $clientAccount = createClientAccountForAccess($pdo, [
         'kode_akses' => $nomorSubmission,
@@ -97,20 +96,11 @@ try {
     } elseif (!empty($clientAccount['message'])) {
         $_SESSION['msg'] = 'Pengajuan tersimpan, tetapi akun client belum dibuat: ' . $clientAccount['message'];
     }
-=======
-    
-    $_SESSION['success'] = "Formulir pengiriman sampel berhasil dikirim. Nomor submission: $nomorSubmission";
-    $_SESSION['submission_no'] = $nomorSubmission;
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     
 } catch (Exception $e) {
-    $pdo->rollBack();
+    if ($pdo->inTransaction()) $pdo->rollBack();
     $_SESSION['msg'] = 'ERROR: Gagal menyimpan data. ' . $e->getMessage();
 }
 
-header('Location: ' . BASE_URL . '/submit_sampel.php');
-<<<<<<< HEAD
+header('Location: ' . BASE_URL . '/ssf.php');
 exit;
-=======
-exit;
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8

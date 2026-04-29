@@ -5,10 +5,6 @@
 // ============================================================
 session_start();
 require_once __DIR__ . '/../config/db.php';
-<<<<<<< HEAD
-=======
-require_once __DIR__ . '/../includes/role_helper.php';
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 
 header('Content-Type: application/json');
 
@@ -45,8 +41,4 @@ try {
     }
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
