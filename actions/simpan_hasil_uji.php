@@ -46,6 +46,19 @@ if ($action === 'edit') {
             $alatId, $analisId, $tanggalUji,
             $kesimpulan, $catatan, $id
         ]);
+
+        $stPid = $pdo->prepare("
+            SELECT s.penerimaan_id
+            FROM hasil_uji h
+            JOIN sampel s ON s.id = h.sampel_id
+            WHERE h.id = ?
+        ");
+        $stPid->execute([$id]);
+        $penerimaanId = (int)$stPid->fetchColumn();
+        if ($penerimaanId) {
+            syncPenerimaanCompletion($pdo, $penerimaanId);
+            cleanupCompletedClientAccounts($pdo, $penerimaanId);
+        }
         
         $_SESSION['msg'] = "Hasil uji berhasil diperbarui.";
         
@@ -109,6 +122,14 @@ $pdo->prepare(
     trim($_POST['catatan'] ?? ''),
     $_POST['tanggal_uji'],
 ]);
+
+$stPid = $pdo->prepare("SELECT penerimaan_id FROM sampel WHERE id = ?");
+$stPid->execute([$sampelId]);
+$penerimaanId = (int)$stPid->fetchColumn();
+if ($penerimaanId) {
+    syncPenerimaanCompletion($pdo, $penerimaanId);
+    cleanupCompletedClientAccounts($pdo, $penerimaanId);
+}
 
 $_SESSION['msg'] = "Hasil uji $kode disimpan. Kesimpulan: ".strtoupper($kes);
 header('Location: '.$redirect); exit;

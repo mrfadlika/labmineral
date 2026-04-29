@@ -6,13 +6,23 @@ session_start();
 require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
+if (!isAdmin()) {
+    $_SESSION['msg'] = 'ERROR: Hanya Administrator yang dapat mengubah penerimaan sampel.';
+    header('Location: ' . BASE_URL . '/dashboard.php');
+    exit;
+}
+
 $action = $_POST['action'] ?? 'tambah';
 
 // ── Update status batch ──────────────────────────────────────
 if ($action === 'update_status') {
     $pdo->prepare("UPDATE penerimaan_sampel SET status = ? WHERE id = ?")
         ->execute([$_POST['status'], (int)$_POST['id']]);
+    $deleted = cleanupCompletedClientAccounts($pdo, (int)$_POST['id']);
     $_SESSION['msg'] = 'Status penerimaan diperbarui.';
+    if ($deleted > 0) {
+        $_SESSION['msg'] .= " $deleted akun client selesai dan otomatis dihapus.";
+    }
     header('Location: ' . BASE_URL . '/penerimaan.php');
     exit;
 }
@@ -112,6 +122,18 @@ try {
     $jumlah = count($kodeList);
     $kodeStr = implode(', ', $kodeList);
     $_SESSION['msg'] = "Penerimaan $noPenerimaan berhasil disimpan. $jumlah sampel dibuat: $kodeStr.";
+
+    $clientAccount = createClientAccountForAccess($pdo, [
+        'kode_akses' => $noPenerimaan,
+        'penerimaan_id' => $penerimaanId,
+        'klien' => $klien,
+    ]);
+
+    if ($clientAccount['created'] ?? false) {
+        $_SESSION['msg'] .= " Akun client: username {$clientAccount['username']}, password {$clientAccount['password']}.";
+    } elseif (!empty($clientAccount['message'])) {
+        $_SESSION['msg'] .= " Akun client belum dibuat: {$clientAccount['message']}";
+    }
 
 } catch (Exception $e) {
     $pdo->rollBack();

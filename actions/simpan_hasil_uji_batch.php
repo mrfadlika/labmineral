@@ -50,8 +50,10 @@ try {
          LEFT JOIN penerimaan_sampel rec ON s.penerimaan_id = rec.id
          WHERE s.id = ?"
     );
+    $stmtPenerimaan = $pdo->prepare("SELECT penerimaan_id FROM sampel WHERE id = ?");
 
     $saved = 0;
+    $penerimaanIds = [];
     foreach ($validRows as $r) {
         $sampelId = (int)$r['sampel_id'];
         $nilai    = (float)$r['nilai'];
@@ -81,10 +83,19 @@ try {
         ]);
 
         $saved++;
+        $stmtPenerimaan->execute([$sampelId]);
+        $penerimaanId = (int)$stmtPenerimaan->fetchColumn();
+        if ($penerimaanId) $penerimaanIds[$penerimaanId] = true;
         // Status sampel dihandle oleh trigger database (FIX S-5)
     }
 
     $pdo->commit();
+
+    foreach (array_keys($penerimaanIds) as $penerimaanId) {
+        syncPenerimaanCompletion($pdo, (int)$penerimaanId);
+        cleanupCompletedClientAccounts($pdo, (int)$penerimaanId);
+    }
+
     $_SESSION['msg'] = "$saved hasil uji berhasil disimpan.";
 
 } catch (Exception $e) {

@@ -5,13 +5,17 @@
 
 USE labmineral;
 
+ALTER TABLE pengguna
+    MODIFY COLUMN role ENUM('admin','analis','klien','supervisor','client')
+    DEFAULT 'analis';
+
 -- Cek user yang ada
 SELECT id, nama, username, role, status FROM pengguna;
 
 -- Update role existing users
 UPDATE pengguna SET role = 'admin' WHERE username = 'admin';
 UPDATE pengguna SET role = 'analis' WHERE username IN ('rani.d', 'budi.s');
-UPDATE pengguna SET role = 'klien' WHERE username IN ('aneka.tm', 'freeport');
+UPDATE pengguna SET role = 'client' WHERE username IN ('aneka.tm', 'freeport');
 
 -- Tambah user supervisor jika belum ada
 INSERT INTO pengguna (nama, username, password, email, role, status) 

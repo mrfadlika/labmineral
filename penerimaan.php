@@ -122,8 +122,27 @@ if ($processSubmission) {
                     $pdo->prepare("UPDATE submission_sampel SET status = 'diproses' WHERE id = ?")->execute([$processSubmission]);
                     
                     $pdo->commit();
-                    
-                    $_SESSION['msg'] = "✅ Penerimaan $noPenerimaan berhasil dibuat dari submission {$submission['nomor_submission']}. " . count($sampelDetails) . " sampel ditambahkan.";
+
+                    $linkedClients = attachClientAccessToPenerimaan($pdo, $processSubmission, (int)$penerimaanId);
+                    $clientMsg = '';
+                    if ($linkedClients > 0) {
+                        $clientMsg = ' Akun client dari submission sudah ditautkan ke penerimaan ini.';
+                    } else {
+                        $clientAccount = createClientAccountForAccess($pdo, [
+                            'kode_akses' => $submission['nomor_submission'],
+                            'submission_id' => $processSubmission,
+                            'penerimaan_id' => $penerimaanId,
+                            'klien' => $submission['klien'],
+                            'email' => $submission['email'] ?? '',
+                        ]);
+                        if ($clientAccount['created'] ?? false) {
+                            $clientMsg = " Akun client dibuat: username {$clientAccount['username']}, password {$clientAccount['password']}.";
+                        } elseif (!empty($clientAccount['message'])) {
+                            $clientMsg = " Akun client belum dibuat: {$clientAccount['message']}";
+                        }
+                    }
+
+                    $_SESSION['msg'] = "✅ Penerimaan $noPenerimaan berhasil dibuat dari submission {$submission['nomor_submission']}. " . count($sampelDetails) . " sampel ditambahkan." . $clientMsg;
                     header('Location: ' . BASE_URL . '/penerimaan.php?tab=daftar');
                     exit;
                     

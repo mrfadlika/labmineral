@@ -7,9 +7,14 @@ session_start();
 require_once __DIR__ . '/config/db.php';
 cekLogin();
 
+if (isClient()) {
+    header('Location: ' . BASE_URL . '/client_monitoring.php');
+    exit;
+}
+
 $pageTitle = 'Dashboard';
-$userRole = $_SESSION['user_role'] ?? 'guest';
-$userNama = $_SESSION['user_nama'] ?? 'User';
+$userRole = $_SESSION['user_role'] ?? $_SESSION['role'] ?? 'guest';
+$userNama = $_SESSION['user_nama'] ?? $_SESSION['nama'] ?? 'User';
 $userId = $_SESSION['user_id'] ?? 0;
 
 // ── Statistik Sampel ─────────────────────────────────────────

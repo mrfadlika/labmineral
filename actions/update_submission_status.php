@@ -5,7 +5,6 @@
 // ============================================================
 session_start();
 require_once __DIR__ . '/../config/db.php';
-require_once __DIR__ . '/../includes/role_helper.php';
 
 header('Content-Type: application/json');
 

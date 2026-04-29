@@ -67,7 +67,7 @@ require_once __DIR__ . '/includes/header.php';
                         <option value="analis">Analis</option>
                         <option value="admin">Admin</option>
                         <option value="supervisor">Supervisor</option>
-                        <option value="klien">Klien</option>
+                        <option value="client">Client</option>
                     </select>
                 </div>
             </div>

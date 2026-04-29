@@ -9,6 +9,8 @@ require_once __DIR__ . '/config/db.php';
 $pageTitle = 'Form Pengiriman Sampel';
 $msg = $_SESSION['msg'] ?? ''; unset($_SESSION['msg']);
 $success = $_SESSION['success'] ?? ''; unset($_SESSION['success']);
+$submissionNo = $_SESSION['submission_no'] ?? ''; unset($_SESSION['submission_no']);
+$clientCredentials = $_SESSION['client_credentials'] ?? null; unset($_SESSION['client_credentials']);
 
 $materialOpts = ['Bijih Emas','Nikel Laterit','Tembaga','Bauksit','Bijih Besi','Timbal/Seng','Mangan','Kromit','Lainnya'];
 $metodeOpts   = ['AAS','XRF','ICP-OES','Gravimetri','Fire Assay','Volumetri'];
@@ -389,8 +391,19 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
                 <div class="big-check">✅</div>
                 <h2>Pengajuan Berhasil Dikirim</h2>
                 <p>Terima kasih telah mengirimkan sampel Anda. Formulir Anda telah kami terima.</p>
-                <div class="submission-number"><?= htmlspecialchars($noAuto) ?></div>
+                <div class="submission-number"><?= htmlspecialchars($submissionNo ?: $noAuto) ?></div>
                 <p>Petugas kami akan segera memproses pengiriman Anda.</p>
+                <?php if ($clientCredentials): ?>
+                    <div style="margin:22px auto 0;max-width:460px;text-align:left;background:var(--bg-base);border:1px solid var(--gold-dim);border-radius:10px;padding:18px 20px">
+                        <div style="color:var(--gold);font-weight:700;margin-bottom:10px">Akun Monitoring Sampel</div>
+                        <p style="margin-bottom:8px;color:var(--text-muted)">Gunakan akun ini untuk memantau status sampel dan melihat invoice saat pengujian selesai.</p>
+                        <div style="display:grid;grid-template-columns:110px 1fr;gap:8px;font-size:14px;color:var(--text-main)">
+                            <span>Username</span><strong><?= htmlspecialchars($clientCredentials['username']) ?></strong>
+                            <span>Password</span><strong><?= htmlspecialchars($clientCredentials['password']) ?></strong>
+                        </div>
+                        <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary" style="display:inline-block;text-decoration:none;margin-top:16px">Masuk ke Monitoring</a>
+                    </div>
+                <?php endif; ?>
                 <button onclick="window.location.reload()" class="btn btn-primary" style="margin-top:22px">⊕ Kirim Form Baru</button>
             </div>
         <?php else: ?>

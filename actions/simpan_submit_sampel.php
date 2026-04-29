@@ -81,9 +81,21 @@ try {
     }
     
     $pdo->commit();
-    
+
+    $clientAccount = createClientAccountForAccess($pdo, [
+        'kode_akses' => $nomorSubmission,
+        'submission_id' => $submissionId,
+        'klien' => $klien,
+        'email' => $email,
+    ]);
+
     $_SESSION['success'] = "Formulir pengiriman sampel berhasil dikirim. Nomor submission: $nomorSubmission";
     $_SESSION['submission_no'] = $nomorSubmission;
+    if ($clientAccount['created'] ?? false) {
+        $_SESSION['client_credentials'] = $clientAccount;
+    } elseif (!empty($clientAccount['message'])) {
+        $_SESSION['msg'] = 'Pengajuan tersimpan, tetapi akun client belum dibuat: ' . $clientAccount['message'];
+    }
     
 } catch (Exception $e) {
     $pdo->rollBack();

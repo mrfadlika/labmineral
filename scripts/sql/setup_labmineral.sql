@@ -12,3 +12,4 @@ SOURCE fix_work_order_batch.sql;
 SOURCE scripts/sql/patch_work_order_nullable.sql;
 SOURCE scripts/sql/patch_supervisor_role.sql;
 SOURCE update_user_roles.sql;
+SOURCE scripts/sql/patch_client_role.sql;
