@@ -1,0 +1,94 @@
+<?php
+// ============================================================
+//  actions/simpan_submit_sampel.php
+//  Menyimpan data submission dari klien ke database
+// ============================================================
+session_start();
+require_once __DIR__ . '/../config/db.php';
+
+$nomorSubmission = trim($_POST['nomor_submission'] ?? '');
+$klien = trim($_POST['klien'] ?? '');
+$kontakPerson = trim($_POST['kontak_person'] ?? '');
+$email = trim($_POST['email'] ?? '');
+$telepon = trim($_POST['telepon'] ?? '');
+$alamat = trim($_POST['alamat'] ?? '');
+$poReferensi = trim($_POST['po_referensi'] ?? '');
+$instruksiKhusus = trim($_POST['instruksi_khusus'] ?? '');
+$catatan = trim($_POST['catatan'] ?? '');
+$sampelInput = $_POST['sampel'] ?? [];
+
+// Validasi
+if (!$nomorSubmission || !$klien || !$email) {
+    $_SESSION['msg'] = 'ERROR: Nomor submission, nama klien, dan email wajib diisi.';
+    header('Location: ' . BASE_URL . '/submit_sampel.php');
+    exit;
+}
+
+if (empty($sampelInput)) {
+    $_SESSION['msg'] = 'ERROR: Minimal 1 sampel harus diisi.';
+    header('Location: ' . BASE_URL . '/submit_sampel.php');
+    exit;
+}
+
+// Cek duplikat nomor submission
+$cek = $pdo->prepare("SELECT id FROM submission_sampel WHERE nomor_submission = ?");
+$cek->execute([$nomorSubmission]);
+if ($cek->fetch()) {
+    $_SESSION['msg'] = "ERROR: Nomor submission $nomorSubmission sudah ada.";
+    header('Location: ' . BASE_URL . '/submit_sampel.php');
+    exit;
+}
+
+try {
+    $pdo->beginTransaction();
+    
+    // Insert ke tabel submission_sampel
+    $stmt = $pdo->prepare("
+        INSERT INTO submission_sampel 
+        (nomor_submission, klien, kontak_person, email, telepon, alamat, 
+         po_referensi, instruksi_khusus, catatan, status)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+    ");
+    $stmt->execute([
+        $nomorSubmission,
+        $klien,
+        $kontakPerson,
+        $email,
+        $telepon,
+        $alamat,
+        $poReferensi,
+        $instruksiKhusus,
+        $catatan
+    ]);
+    $submissionId = $pdo->lastInsertId();
+    
+    // Insert detail sampel
+    $stmtDetail = $pdo->prepare("
+        INSERT INTO submission_sampel_detail 
+        (submission_id, jenis_material, berat_gram, metode_uji, parameter, keterangan)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ");
+    
+    foreach ($sampelInput as $s) {
+        $stmtDetail->execute([
+            $submissionId,
+            trim($s['jenis_material'] ?? ''),
+            !empty($s['berat_gram']) ? (float)$s['berat_gram'] : null,
+            trim($s['metode_uji'] ?? ''),
+            trim($s['parameter'] ?? ''),
+            trim($s['keterangan'] ?? '')
+        ]);
+    }
+    
+    $pdo->commit();
+    
+    $_SESSION['success'] = "Formulir pengiriman sampel berhasil dikirim. Nomor submission: $nomorSubmission";
+    $_SESSION['submission_no'] = $nomorSubmission;
+    
+} catch (Exception $e) {
+    $pdo->rollBack();
+    $_SESSION['msg'] = 'ERROR: Gagal menyimpan data. ' . $e->getMessage();
+}
+
+header('Location: ' . BASE_URL . '/submit_sampel.php');
+exit;
