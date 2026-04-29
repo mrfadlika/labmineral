@@ -6,11 +6,19 @@ if (!isset($pageTitle)) $pageTitle = 'LabMineral Pro';
 
 // Hitung alert dengan fungsi terpusat
 global $pdo;
+<<<<<<< HEAD
 $alertData  = ($pdo && !isClient()) ? hitungAlert($pdo) : ['total' => 0];
 $alertCount = $alertData['total'];
 
 // Ambil role dari session (dukung kedua format)
 $userRole = currentUserRole() ?? 'guest';
+=======
+$alertData  = $pdo ? hitungAlert($pdo) : ['total' => 0];
+$alertCount = $alertData['total'];
+
+// Ambil role dari session (dukung kedua format)
+$userRole = $_SESSION['user_role'] ?? $_SESSION['role'] ?? 'guest';
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 $userNama = $_SESSION['nama'] ?? $_SESSION['user_nama'] ?? $_SESSION['name'] ?? 'User';
 ?>
 <!DOCTYPE html>
@@ -33,7 +41,10 @@ $userNama = $_SESSION['nama'] ?? $_SESSION['user_nama'] ?? $_SESSION['name'] ?? 
         .user-role-badge.analis { background: #2ecc71; color: white; }
         .user-role-badge.supervisor { background: #f39c12; color: white; }
         .user-role-badge.klien { background: #3498db; color: white; }
+<<<<<<< HEAD
         .user-role-badge.client { background: #3498db; color: white; }
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
         .user-role-badge.guest { background: #95a5a6; color: white; }
     </style>
 </head>
@@ -56,4 +67,8 @@ $userNama = $_SESSION['nama'] ?? $_SESSION['user_nama'] ?? $_SESSION['name'] ?? 
             </span>
         </div>
     </div>
+<<<<<<< HEAD
     <div id="content">
+=======
+    <div id="content">
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8

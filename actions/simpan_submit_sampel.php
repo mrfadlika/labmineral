@@ -81,6 +81,7 @@ try {
     }
     
     $pdo->commit();
+<<<<<<< HEAD
 
     $clientAccount = createClientAccountForAccess($pdo, [
         'kode_akses' => $nomorSubmission,
@@ -96,6 +97,11 @@ try {
     } elseif (!empty($clientAccount['message'])) {
         $_SESSION['msg'] = 'Pengajuan tersimpan, tetapi akun client belum dibuat: ' . $clientAccount['message'];
     }
+=======
+    
+    $_SESSION['success'] = "Formulir pengiriman sampel berhasil dikirim. Nomor submission: $nomorSubmission";
+    $_SESSION['submission_no'] = $nomorSubmission;
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     
 } catch (Exception $e) {
     $pdo->rollBack();
@@ -103,4 +109,8 @@ try {
 }
 
 header('Location: ' . BASE_URL . '/submit_sampel.php');
+<<<<<<< HEAD
 exit;
+=======
+exit;
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8

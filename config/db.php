@@ -9,7 +9,27 @@ define('DB_PASS',     '');
 define('DB_NAME',     'labmineral');
 define('APP_NAME',    'LabMineral Pro');
 define('APP_VERSION', '2.0.0');
+<<<<<<< HEAD
 define('BASE_URL',    '/labmineral-main');
+=======
+
+// Turunkan base URL dari folder project agar asset tetap terbaca meski nama folder berubah.
+$projectRoot = realpath(dirname(__DIR__));
+$documentRoot = isset($_SERVER['DOCUMENT_ROOT']) ? realpath($_SERVER['DOCUMENT_ROOT']) : false;
+$baseUrl = '/labmineral-main';
+
+if ($projectRoot && $documentRoot) {
+    $projectRoot = str_replace('\\', '/', $projectRoot);
+    $documentRoot = rtrim(str_replace('\\', '/', $documentRoot), '/');
+
+    if (strpos($projectRoot, $documentRoot) === 0) {
+        $relativePath = trim(substr($projectRoot, strlen($documentRoot)), '/');
+        $baseUrl = $relativePath === '' ? '' : '/' . $relativePath;
+    }
+}
+
+define('BASE_URL', $baseUrl);
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 
 // ── Koneksi PDO ──────────────────────────────────────────────
 $pdo = null;
@@ -28,13 +48,17 @@ try {
 
 // ── Cek login ────────────────────────────────────────────────
 function cekLogin() {
+<<<<<<< HEAD
     global $pdo;
 
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     if (session_status() === PHP_SESSION_NONE) session_start();
     if (empty($_SESSION['user_id'])) {
         header('Location: '.BASE_URL.'/index.php'); 
         exit;
     }
+<<<<<<< HEAD
 
     if ($pdo instanceof PDO) {
         try {
@@ -65,6 +89,8 @@ function cekLogin() {
         header('Location: '.BASE_URL.'/client_monitoring.php');
         exit;
     }
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 }
 
 // ── Sanitasi ─────────────────────────────────────────────────
@@ -76,6 +102,7 @@ function bersihkan($s) {
 // ROLE HELPER FUNCTIONS (terintegrasi dengan session)
 // ============================================================
 
+<<<<<<< HEAD
 function normalizeRole($role) {
     return $role === 'klien' ? 'client' : $role;
 }
@@ -97,6 +124,22 @@ function hasRole($role) {
         return in_array($userRole, array_map('normalizeRole', $role), true);
     }
     return $userRole === normalizeRole($role);
+=======
+/**
+ * Cek apakah user memiliki role tertentu
+ * Mendukung kedua format session: user_role dan role
+ */
+function hasRole($role) {
+    // Cek kedua format session
+    $userRole = $_SESSION['user_role'] ?? $_SESSION['role'] ?? null;
+    
+    if (!$userRole) return false;
+    
+    if (is_array($role)) {
+        return in_array($userRole, $role);
+    }
+    return $userRole === $role;
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 }
 
 /**
@@ -119,6 +162,7 @@ function isAnalis() {
 function isSupervisor() {
     return hasRole('supervisor');
 }
+<<<<<<< HEAD
 
 /**
  * Cek apakah user adalah client/klien.
@@ -127,16 +171,25 @@ function isClient() {
     return hasRole('client');
 }
 
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 /**
  * Tampilkan badge role dengan warna berbeda
  */
 function roleBadge($role) {
+<<<<<<< HEAD
     $role = normalizeRole($role);
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     $colors = [
         'admin' => '#e74c3c',
         'analis' => '#2ecc71',
         'supervisor' => '#f39c12',
+<<<<<<< HEAD
         'client' => '#3498db'
+=======
+        'klien' => '#3498db'
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     ];
     $color = $colors[$role] ?? '#95a5a6';
     return "<span style='background:$color;color:white;padding:2px 8px;border-radius:12px;font-size:.65rem;display:inline-block;'>" . strtoupper($role) . "</span>";
@@ -291,6 +344,7 @@ function canAccessDashboard() {
 }
 
 /**
+<<<<<<< HEAD
  * Monitoring client
  */
 function canAccessClientMonitoring() {
@@ -298,6 +352,8 @@ function canAccessClientMonitoring() {
 }
 
 /**
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
  * Manajemen Pengguna - hanya admin
  */
 function canAccessPengguna() {
@@ -308,6 +364,7 @@ function canAccessPengguna() {
 // END OF ROLE HELPER FUNCTIONS
 // ============================================================
 
+<<<<<<< HEAD
 function tableExists(PDO $pdo, string $table): bool {
     $stmt = $pdo->prepare(
         "SELECT COUNT(*) FROM information_schema.TABLES
@@ -552,6 +609,8 @@ function cleanupCompletedClientAccounts(PDO $pdo, ?int $penerimaanId = null): in
     return $deleted;
 }
 
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 // ── STATUS BAHAN — SATU SUMBER KEBENARAN ─────────────────────
 function statusBahan($stok, $min) {
     $stok = (float)$stok;
@@ -626,7 +685,10 @@ function badgeStatus($s) {
         'analis'      => ['st-gold', 'Analis'],
         'supervisor'  => ['st-warn', 'Supervisor'],
         'klien'       => ['st-blue', 'Klien'],
+<<<<<<< HEAD
         'client'      => ['st-blue', 'Client'],
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
         'diterima'    => ['st-blue', 'Diterima'],
         'diproses'    => ['st-warn', 'Diproses'],
         'draft'       => ['st-warn', 'Draft'],

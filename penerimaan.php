@@ -122,6 +122,7 @@ if ($processSubmission) {
                     $pdo->prepare("UPDATE submission_sampel SET status = 'diproses' WHERE id = ?")->execute([$processSubmission]);
                     
                     $pdo->commit();
+<<<<<<< HEAD
 
                     $linkedClients = attachClientAccessToPenerimaan($pdo, $processSubmission, (int)$penerimaanId);
                     $clientMsg = '';
@@ -143,6 +144,10 @@ if ($processSubmission) {
                     }
 
                     $_SESSION['msg'] = "✅ Penerimaan $noPenerimaan berhasil dibuat dari submission {$submission['nomor_submission']}. " . count($sampelDetails) . " sampel ditambahkan." . $clientMsg;
+=======
+                    
+                    $_SESSION['msg'] = "✅ Penerimaan $noPenerimaan berhasil dibuat dari submission {$submission['nomor_submission']}. " . count($sampelDetails) . " sampel ditambahkan.";
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
                     header('Location: ' . BASE_URL . '/penerimaan.php?tab=daftar');
                     exit;
                     
@@ -823,4 +828,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 </script>
 
+<<<<<<< HEAD
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+=======
+<?php require_once __DIR__ . '/includes/footer.php'; ?>
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8

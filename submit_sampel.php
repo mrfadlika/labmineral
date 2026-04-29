@@ -9,8 +9,11 @@ require_once __DIR__ . '/config/db.php';
 $pageTitle = 'Form Pengiriman Sampel';
 $msg = $_SESSION['msg'] ?? ''; unset($_SESSION['msg']);
 $success = $_SESSION['success'] ?? ''; unset($_SESSION['success']);
+<<<<<<< HEAD
 $submissionNo = $_SESSION['submission_no'] ?? ''; unset($_SESSION['submission_no']);
 $clientCredentials = $_SESSION['client_credentials'] ?? null; unset($_SESSION['client_credentials']);
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 
 $materialOpts = ['Bijih Emas','Nikel Laterit','Tembaga','Bauksit','Bijih Besi','Timbal/Seng','Mangan','Kromit','Lainnya'];
 $metodeOpts   = ['AAS','XRF','ICP-OES','Gravimetri','Fire Assay','Volumetri'];
@@ -391,6 +394,7 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
                 <div class="big-check">✅</div>
                 <h2>Pengajuan Berhasil Dikirim</h2>
                 <p>Terima kasih telah mengirimkan sampel Anda. Formulir Anda telah kami terima.</p>
+<<<<<<< HEAD
                 <div class="submission-number"><?= htmlspecialchars($submissionNo ?: $noAuto) ?></div>
                 <p>Petugas kami akan segera memproses pengiriman Anda.</p>
                 <?php if ($clientCredentials): ?>
@@ -404,6 +408,10 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
                         <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary" style="display:inline-block;text-decoration:none;margin-top:16px">Masuk ke Monitoring</a>
                     </div>
                 <?php endif; ?>
+=======
+                <div class="submission-number"><?= htmlspecialchars($noAuto) ?></div>
+                <p>Petugas kami akan segera memproses pengiriman Anda.</p>
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
                 <button onclick="window.location.reload()" class="btn btn-primary" style="margin-top:22px">⊕ Kirim Form Baru</button>
             </div>
         <?php else: ?>
@@ -581,4 +589,8 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
         document.addEventListener('DOMContentLoaded', () => addSampleRow());
     </script>
 </body>
+<<<<<<< HEAD
 </html>
+=======
+</html>
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8

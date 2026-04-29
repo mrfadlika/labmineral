@@ -18,7 +18,11 @@ CREATE TABLE pengguna (
     username   VARCHAR(50)  NOT NULL UNIQUE,
     password   VARCHAR(255) NOT NULL,
     email      VARCHAR(100),
+<<<<<<< HEAD
     role       ENUM('admin','analis','klien','supervisor','client') DEFAULT 'analis',
+=======
+    role       ENUM('admin','analis','klien') DEFAULT 'analis',
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     status     ENUM('aktif','nonaktif')       DEFAULT 'aktif',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -28,8 +32,13 @@ INSERT INTO pengguna (nama, username, password, email, role) VALUES
 ('Dr. Ahmad Fauzi',   'admin',    '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'ahmad@lab.com',   'admin'),
 ('Rani Dewi, S.Si',   'rani.d',   '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'rani@lab.com',    'analis'),
 ('Budi Santoso',      'budi.s',   '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'budi@lab.com',    'analis'),
+<<<<<<< HEAD
 ('PT. Aneka Tambang', 'aneka.tm', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'aneka@mail.com',  'client'),
 ('PT. Freeport Ind.', 'freeport', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'fp@freeport.com', 'client');
+=======
+('PT. Aneka Tambang', 'aneka.tm', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'aneka@mail.com',  'klien'),
+('PT. Freeport Ind.', 'freeport', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'fp@freeport.com', 'klien');
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 
 -- ------------------------------------------------------------
 -- SAMPEL

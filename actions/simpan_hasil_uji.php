@@ -46,6 +46,7 @@ if ($action === 'edit') {
             $alatId, $analisId, $tanggalUji,
             $kesimpulan, $catatan, $id
         ]);
+<<<<<<< HEAD
 
         $stPid = $pdo->prepare("
             SELECT s.penerimaan_id
@@ -59,6 +60,8 @@ if ($action === 'edit') {
             syncPenerimaanCompletion($pdo, $penerimaanId);
             cleanupCompletedClientAccounts($pdo, $penerimaanId);
         }
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
         
         $_SESSION['msg'] = "Hasil uji berhasil diperbarui.";
         
@@ -123,6 +126,7 @@ $pdo->prepare(
     $_POST['tanggal_uji'],
 ]);
 
+<<<<<<< HEAD
 $stPid = $pdo->prepare("SELECT penerimaan_id FROM sampel WHERE id = ?");
 $stPid->execute([$sampelId]);
 $penerimaanId = (int)$stPid->fetchColumn();
@@ -133,3 +137,7 @@ if ($penerimaanId) {
 
 $_SESSION['msg'] = "Hasil uji $kode disimpan. Kesimpulan: ".strtoupper($kes);
 header('Location: '.$redirect); exit;
+=======
+$_SESSION['msg'] = "Hasil uji $kode disimpan. Kesimpulan: ".strtoupper($kes);
+header('Location: '.$redirect); exit;
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8

@@ -12,4 +12,7 @@ SOURCE fix_work_order_batch.sql;
 SOURCE scripts/sql/patch_work_order_nullable.sql;
 SOURCE scripts/sql/patch_supervisor_role.sql;
 SOURCE update_user_roles.sql;
+<<<<<<< HEAD
 SOURCE scripts/sql/patch_client_role.sql;
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8

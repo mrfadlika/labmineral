@@ -21,12 +21,15 @@ $stInv->execute([$id]);
 $inv = $stInv->fetch();
 if (!$inv) { header('Location: '.BASE_URL.'/invoice.php'); exit; }
 
+<<<<<<< HEAD
 if (isClient() && (!in_array($inv['status'], ['diterbitkan','lunas'], true) || !clientCanAccessInvoice($pdo, $id, (int)$_SESSION['user_id']))) {
     $_SESSION['msg'] = 'ERROR: Invoice tidak tersedia untuk akun ini.';
     header('Location: '.BASE_URL.'/client_monitoring.php');
     exit;
 }
 
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 // ── Ambil item ───────────────────────────────────────────────
 $items = $pdo->prepare(
     "SELECT * FROM invoice_item WHERE invoice_id = ? ORDER BY id"

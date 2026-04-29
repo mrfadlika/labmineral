@@ -6,12 +6,15 @@ session_start();
 require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
+<<<<<<< HEAD
 if (!isAdmin()) {
     $_SESSION['msg'] = 'ERROR: Hanya Administrator yang dapat mengubah invoice.';
     header('Location: ' . BASE_URL . '/dashboard.php');
     exit;
 }
 
+=======
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 $action = $_POST['action'] ?? 'buat';
 
 // ── Buat invoice baru ────────────────────────────────────────
@@ -94,6 +97,7 @@ if ($action === 'terbitkan') {
 
 // ── Tandai lunas ──────────────────────────────────────────────
 if ($action === 'lunas') {
+<<<<<<< HEAD
     $invoiceId = (int)$_POST['id'];
     $pdo->prepare("UPDATE invoice SET status='lunas' WHERE id=?")
         ->execute([$invoiceId]);
@@ -109,6 +113,11 @@ if ($action === 'lunas') {
     if ($deleted > 0) {
         $_SESSION['msg'] .= " $deleted akun client selesai dan otomatis dihapus.";
     }
+=======
+    $pdo->prepare("UPDATE invoice SET status='lunas' WHERE id=?")
+        ->execute([(int)$_POST['id']]);
+    $_SESSION['msg'] = 'Invoice ditandai lunas.';
+>>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
     header('Location: '.BASE_URL.'/invoice.php'); exit;
 }
 
