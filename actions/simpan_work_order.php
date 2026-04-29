@@ -30,6 +30,7 @@ switch ($action) {
         $jadwalSelesai = $_POST['jadwal_selesai'] ?? null;
         $catatan       = trim($_POST['catatan']   ?? '');
         $statusAwal    = $_POST['status_awal']    ?? 'draft';
+        $butuhPrep     = isset($_POST['butuh_preparasi']) ? 1 : 0;
 
         // ── Validasi dasar ───────────────────────────────────
         if (!$nomorWo) {
@@ -100,15 +101,15 @@ switch ($action) {
                     (nomor_wo, penerimaan_id, lingkup_batch,
                      analis_id, peralatan_id,
                      metode, parameter, prioritas,
-                     jadwal_mulai, jadwal_selesai, catatan, status)
-                VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     jadwal_mulai, jadwal_selesai, catatan, status, butuh_preparasi)
+                VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stWo->execute([
                 $nomorWo, $penerimaanId,
                 $analisId, $peralatanId,
                 $metode ?: null, $parameter ?: null, $prioritas,
                 $jadwalMulai, $jadwalSelesai,
-                $catatan ?: null, $statusAwal
+                $catatan ?: null, $statusAwal, $butuhPrep
             ]);
             $woId = $pdo->lastInsertId();
 
@@ -148,15 +149,15 @@ switch ($action) {
                     (nomor_wo, penerimaan_id, lingkup_batch,
                      analis_id, peralatan_id,
                      metode, parameter, prioritas,
-                     jadwal_mulai, jadwal_selesai, catatan, status)
-                VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     jadwal_mulai, jadwal_selesai, catatan, status, butuh_preparasi)
+                VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ");
             $stWo->execute([
                 $nomorWo, $refPenerimaanId,
                 $analisId, $peralatanId,
                 $metode ?: null, $parameter ?: null, $prioritas,
                 $jadwalMulai, $jadwalSelesai,
-                $catatan ?: null, $statusAwal
+                $catatan ?: null, $statusAwal, $butuhPrep
             ]);
             $woId = $pdo->lastInsertId();
 

@@ -38,11 +38,12 @@ $menu = [
     ['href' => 'invoice.php',     'ico' => '&#128179;', 'label' => 'Invoice'],
     ['href' => 'bahan.php',       'ico' => '&#129514;', 'label' => 'Inventaris Bahan'],
     ['href' => 'peralatan.php',   'ico' => '&#9881;',   'label' => 'Peralatan'],
+    ['href' => 'monitoring.php',  'ico' => '📊', 'label' => 'Monitoring Sampel'],
     ['href' => 'laporan.php',     'ico' => '&#128196;', 'label' => 'Laporan'],
 ];
 // Tambahkan menu submission untuk admin
 if (isAdmin()) {
-    $menu[] = ['href' => 'submission.php', 'ico' => '📋', 'label' => 'Submission Klien'];
+    $menu[] = ['href' => 'submission.php', 'ico' => '📋', 'label' => 'Sample Submission (SSF)'];
 }
 if (($_SESSION['role'] ?? '') === 'admin') {
     $menu[] = ['href' => 'pengguna.php', 'ico' => '&#128101;', 'label' => 'Pengguna'];

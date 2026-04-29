@@ -34,6 +34,15 @@ if ($action === 'update_status') {
     exit;
 }
 
+// ── Konfirmasi admin ─────────────────────────────────────────
+if ($action === 'konfirmasi') {
+    $pdo->prepare("UPDATE penerimaan_sampel SET is_confirmed = 1 WHERE id = ?")
+        ->execute([(int)$_POST['id']]);
+    $_SESSION['msg'] = 'Batch penerimaan telah dikonfirmasi oleh Admin.';
+    header('Location: ' . BASE_URL . '/penerimaan.php');
+    exit;
+}
+
 // ── Simpan penerimaan baru + semua sampel ────────────────────
 $noPenerimaan = trim($_POST['nomor_penerimaan'] ?? '');
 $klien        = trim($_POST['klien'] ?? '');

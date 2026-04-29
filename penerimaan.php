@@ -122,8 +122,6 @@ if ($processSubmission) {
                     $pdo->prepare("UPDATE submission_sampel SET status = 'diproses' WHERE id = ?")->execute([$processSubmission]);
                     
                     $pdo->commit();
-<<<<<<< HEAD
-
                     $linkedClients = attachClientAccessToPenerimaan($pdo, $processSubmission, (int)$penerimaanId);
                     $clientMsg = '';
                     if ($linkedClients > 0) {
@@ -144,10 +142,6 @@ if ($processSubmission) {
                     }
 
                     $_SESSION['msg'] = "✅ Penerimaan $noPenerimaan berhasil dibuat dari submission {$submission['nomor_submission']}. " . count($sampelDetails) . " sampel ditambahkan." . $clientMsg;
-=======
-                    
-                    $_SESSION['msg'] = "✅ Penerimaan $noPenerimaan berhasil dibuat dari submission {$submission['nomor_submission']}. " . count($sampelDetails) . " sampel ditambahkan.";
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
                     header('Location: ' . BASE_URL . '/penerimaan.php?tab=daftar');
                     exit;
                     
@@ -260,34 +254,6 @@ require_once __DIR__ . '/includes/header.php';
 .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
 .tab-pane{display:none;}.tab-pane.active{display:block;}
 
-/* SSF = Sample Submission Form styles */
-.ssf-preview{background:#fff;color:#222;border-radius:8px;padding:32px 36px;font-family:Arial,sans-serif;font-size:10pt;max-width:860px;margin:0 auto;}
-.ssf-kop{display:flex;align-items:center;border-bottom:3px solid #1e4028;padding-bottom:12px;margin-bottom:6px;}
-.ssf-logo{width:64px;height:64px;background:#1e4028;border-radius:6px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#f0c040;font-weight:900;font-size:9pt;text-align:center;flex-shrink:0;margin-right:14px;line-height:1.3;}
-.ssf-kop h1{font-size:14pt;font-weight:900;color:#1e4028;}
-.ssf-kop p{font-size:8pt;color:#444;margin-top:2px;line-height:1.5;}
-.ssf-divider{height:3px;background:linear-gradient(to right,#1e4028,#f0c040,#1e4028);margin:4px 0 16px;}
-.ssf-title{text-align:center;margin-bottom:16px;}
-.ssf-title h2{font-size:13pt;font-weight:900;text-decoration:underline;letter-spacing:1px;}
-.ssf-title p{font-size:9pt;font-style:italic;color:#555;}
-.ssf-section{margin-bottom:14px;}
-.ssf-section-title{font-size:9pt;font-weight:700;background:#1e4028;color:#f0c040;padding:4px 10px;border-radius:3px;margin-bottom:8px;display:inline-block;}
-.ssf-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 20px;}
-.ssf-field{display:flex;flex-direction:column;margin-bottom:6px;}
-.ssf-field label{font-size:8pt;font-weight:700;color:#333;margin-bottom:2px;}
-.ssf-field .ssf-input{border:none;border-bottom:1px solid #888;padding:4px 2px;font-size:9pt;background:transparent;width:100%;outline:none;color:#222;}
-.ssf-field .ssf-input:focus{border-bottom-color:#1e4028;}
-.ssf-field .ssf-select{border:none;border-bottom:1px solid #888;padding:4px 2px;font-size:9pt;background:transparent;width:100%;outline:none;color:#222;}
-.ssf-tbl{width:100%;border-collapse:collapse;font-size:8.5pt;margin-bottom:6px;}
-.ssf-tbl thead th{background:#1e4028;color:#f0c040;padding:5px 7px;text-align:center;border:1px solid #2e6040;}
-.ssf-tbl tbody td{padding:5px 7px;border:1px solid #bbb;vertical-align:middle;}
-.ssf-tbl tbody td input{border:none;width:100%;background:transparent;font-size:8.5pt;outline:none;padding:2px;}
-.ssf-tbl tbody td select{border:none;width:100%;background:transparent;font-size:8.5pt;outline:none;}
-.ssf-disclaimer{font-size:7.5pt;text-align:justify;line-height:1.6;color:#333;margin-top:12px;border-top:1px solid #ccc;padding-top:8px;}
-.ssf-sign{display:flex;gap:40px;margin-top:16px;}
-.ssf-sign-box .sign-label{font-size:8.5pt;font-weight:700;margin-bottom:40px;}
-.ssf-sign-box .sign-line{border-top:1px solid #333;min-width:160px;padding-top:4px;font-size:8pt;color:#555;}
-.ssf-footer{margin-top:16px;padding-top:8px;border-top:1px solid #ccc;display:flex;justify-content:space-between;font-size:7pt;color:#888;}
 
 /* Submission info card */
 .submission-info-card {
@@ -339,7 +305,6 @@ require_once __DIR__ . '/includes/header.php';
 <div class="tabs no-print">
     <button class="tab-btn <?= $tab==='daftar'?'active':'' ?>" onclick="switchTab('daftar',this)">&#128203; Daftar Penerimaan</button>
     <button class="tab-btn <?= $tab==='batch'?'active':'' ?>"  onclick="switchTab('batch',this)">&#10133; Penerimaan Baru</button>
-    <button class="tab-btn <?= $tab==='ssf'?'active':'' ?>"    onclick="switchTab('ssf',this)">&#128196; Sample Submission Form</button>
 </div>
 
 <!-- ══════════════════════════════════════════════════
@@ -393,11 +358,19 @@ require_once __DIR__ . '/includes/header.php';
                     </form>
                 </td>
                 <td style="white-space:nowrap">
-                    <!-- Cetak SSF untuk batch ini -->
-                    <button onclick="cetakSSF('<?= bersihkan($r['nomor_penerimaan']) ?>','<?= bersihkan(addslashes($r['klien'])) ?>','<?= $r['tanggal_terima'] ?>',<?= $r['total_sampel'] ?>)"
-                            class="btn btn-gold btn-sm" style="font-size:.68rem;padding:3px 8px" title="Cetak Sample Submission Form">
-                        &#128196; SSF
-                    </button>
+                    <!-- Konfirmasi Admin -->
+                    <?php if (!$r['is_confirmed']): ?>
+                        <form method="POST" action="<?= BASE_URL ?>/actions/simpan_penerimaan.php" style="display:inline">
+                            <input type="hidden" name="action" value="konfirmasi"/>
+                            <input type="hidden" name="id" value="<?= $r['id'] ?>"/>
+                            <button type="submit" class="btn btn-green btn-sm" style="font-size:.68rem;padding:3px 8px">
+                                &#10003; Konfirmasi
+                            </button>
+                        </form>
+                    <?php else: ?>
+                        <span style="color:var(--green);font-size:.65rem;font-weight:700;margin-right:5px">&#10003; Terkonfirmasi</span>
+                    <?php endif; ?>
+
                     <a href="<?= BASE_URL ?>/exports/export_pdf.php?rec=<?= urlencode($r['nomor_penerimaan']) ?>&cetak=1"
                        target="_blank" class="btn btn-red btn-sm" style="font-size:.68rem;padding:3px 8px" title="Export PDF Laporan">
                         &#128196; PDF
@@ -559,46 +532,6 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<!-- ══════════════════════════════════════════════════
-     TAB 3 — SAMPLE SUBMISSION FORM
-══════════════════════════════════════════════════ -->
-<div id="tab-ssf" class="tab-pane <?= $tab==='ssf'?'active':'' ?>">
-
-    <!-- Panel konfigurasi SSF -->
-    <div class="card no-print" style="margin-bottom:16px">
-        <div class="card-title">&#9881; Konfigurasi Sample Submission Form</div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-            <div class="form-group">
-                <label>Nama Klien (opsional)</label>
-                <input id="ssfKlien" placeholder="Kosongkan untuk form kosong" list="klienSuggestSSF"/>
-                <datalist id="klienSuggestSSF">
-                    <?php foreach ($klienAll as $k): ?><option value="<?= bersihkan($k) ?>"><?php endforeach; ?>
-                </datalist>
-            </div>
-            <div class="form-group">
-                <label>Jumlah Baris Sampel</label>
-                <select id="ssfJumlah">
-                    <?php for ($i=1;$i<=10;$i++): ?><option value="<?= $i ?>" <?= $i==5?'selected':'' ?>><?= $i ?> sampel</option><?php endfor; ?>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Tanggal Form</label>
-                <input type="date" id="ssfTanggal" value="<?= date('Y-m-d') ?>"/>
-            </div>
-        </div>
-        <div style="display:flex;gap:10px;margin-top:12px">
-            <button class="btn btn-green" onclick="generateSSF()">&#128065; Preview Form</button>
-            <button class="btn btn-gold" onclick="window.print()">&#128196; Cetak / Simpan PDF</button>
-            <span style="font-size:.75rem;color:var(--text3);align-self:center">
-                Pilih <strong>Save as PDF</strong> saat dialog cetak muncul
-            </span>
-        </div>
-    </div>
-
-    <!-- Preview SSF -->
-    <div id="ssfPreview"></div>
-</div>
-
 <script>
 // ── TAB SWITCH ────────────────────────────────────────────────
 function switchTab(name, el) {
@@ -672,164 +605,16 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php else: ?>
 tambahBarisBatch();
 <?php endif; ?>
-
-// ── SAMPLE SUBMISSION FORM GENERATOR ────────────────────────────────────────
-function generateSSF(noRec, klienPre, tglPre, jmlPre) {
-    const klien  = klienPre  || document.getElementById('ssfKlien')?.value   || '';
-    const jumlah = jmlPre    || parseInt(document.getElementById('ssfJumlah')?.value || 5);
-    const tgl    = tglPre    || document.getElementById('ssfTanggal')?.value  || '';
-    const noForm = noRec     || 'SSF-' + Date.now().toString().slice(-6);
-
-    const matSelectOpts = <?= json_encode($materialOpts) ?>.map(m => `<option>${m}</option>`).join('');
-    const metSelectOpts = <?= json_encode($metodeOpts) ?>.map(m => `<option>${m}</option>`).join('');
-
-    let rows = '';
-    for (let i = 1; i <= jumlah; i++) {
-        rows += `<td>
-            <td style="text-align:center;font-weight:700">${i}</td>
-            <td><input class="ssf-input-cell" placeholder="Kode sampel" style="width:100%;border:none;background:transparent;font-size:8.5pt;outline:none;padding:2px"/></td>
-            <td>
-                <select style="width:100%;border:none;background:transparent;font-size:8.5pt;outline:none">
-                    <option value="">— Pilih —</option>
-                    ${matSelectOpts}
-                </select>
-            </td>
-            <td><input placeholder="gram" style="width:100%;border:none;background:transparent;font-size:8.5pt;outline:none;text-align:center"/></td>
-            <td>
-                <select style="width:100%;border:none;background:transparent;font-size:8.5pt;outline:none">
-                    <option value="">— Pilih —</option>
-                    ${metSelectOpts}
-                </select>
-            </td>
-            <td><input placeholder="Keterangan" style="width:100%;border:none;background:transparent;font-size:8.5pt;outline:none"/></td>
-         </tr>`;
-    }
-
-    const tglFmt = tgl ? new Date(tgl).toLocaleDateString('id-ID',{day:'2-digit',month:'long',year:'numeric'}) : '___________________';
-
-    const html = `
-    <div class="ssf-preview" id="ssfDoc">
-        <!-- KOP -->
-        <div class="ssf-kop">
-            <div class="ssf-logo">&#9879;<br>LAB<br>MINERAL</div>
-            <div>
-                <h1>LABMINERAL PRO</h1>
-                <p>Laboratorium Uji Mineral &amp; Logam<br>
-                Jl. Tamalanrea Raya, Makassar 90245, Sulawesi Selatan<br>
-                Telp/Fax. +62 411 000-0000 &nbsp;|&nbsp; Email: lab@labmineral.co.id</p>
-            </div>
-        </div>
-        <div class="ssf-divider"></div>
-
-        <!-- JUDUL -->
-        <div class="ssf-title">
-            <h2>SAMPLE SUBMISSION FORM</h2>
-            <p>(Formulir Pengiriman Sampel)</p>
-        </div>
-
-        <!-- INFO FORM -->
-        <div style="display:flex;justify-content:space-between;font-size:8.5pt;color:#666;margin-bottom:14px">
-            <span>No. Form: <strong style="color:#1e4028">${noForm}</strong></span>
-            <span>Tanggal: <strong>${tglFmt}</strong></span>
-        </div>
-
-        <!-- SEKSI A: INFO KLIEN -->
-        <div class="ssf-section">
-            <div class="ssf-section-title">A. Informasi Klien / Customer Information</div>
-            <div class="ssf-grid">
-                <div class="ssf-field"><label>Nama Perusahaan / Company Name</label><input class="ssf-input" value="${klien}" placeholder="________________________________"/></div>
-                <div class="ssf-field"><label>Nama Kontak / Contact Person</label><input class="ssf-input" placeholder="________________________________"/></div>
-                <div class="ssf-field"><label>Alamat / Address</label><input class="ssf-input" placeholder="________________________________"/></div>
-                <div class="ssf-field"><label>No. Telepon / Phone</label><input class="ssf-input" placeholder="________________________________"/></div>
-                <div class="ssf-field"><label>Email</label><input class="ssf-input" placeholder="________________________________"/></div>
-                <div class="ssf-field"><label>No. PO / Referensi</label><input class="ssf-input" placeholder="________________________________"/></div>
-            </div>
-        </div>
-
-        <!-- SEKSI B: DETAIL PENGIRIMAN -->
-        <div class="ssf-section">
-            <div class="ssf-section-title">B. Detail Pengiriman / Submission Details</div>
-            <div class="ssf-grid">
-                <div class="ssf-field"><label>Tanggal Pengiriman / Date of Submission</label><input class="ssf-input" type="date" value="${tgl}"/></div>
-                <div class="ssf-field"><label>Bentuk Sampel / Form of Sample</label><select class="ssf-select"><option>Pulp</option><option>Rock</option><option>Soil</option><option>Core</option><option>Sludge</option><option>Lainnya</option></select></div>
-                <div class="ssf-field"><label>Jumlah Sampel / Number of Samples</label><input class="ssf-input" value="${jumlah}" type="number"/></div>
-                <div class="ssf-field"><label>Instruksi Khusus / Special Instructions</label><input class="ssf-input" placeholder="________________________________"/></div>
-            </div>
-        </div>
-
-        <!-- SEKSI C: PERNYATAAN JUMLAH SAMPEL -->
-        <div class="ssf-section">
-            <div class="ssf-section-title">C. Jumlah &amp; Keterangan Sampel</div>
-            <div class="ssf-grid">
-                <div class="ssf-field"><label>Jumlah Sampel / Number of Samples</label><input class="ssf-input" value="${jumlah}" type="number"/></div>
-                <div class="ssf-field"><label>Jenis Material / Material Type</label><input class="ssf-input" placeholder="Nikel Laterit, Bijih Emas, ..."/></div>
-                <div class="ssf-field"><label>Analisa yang diminta / Analysis Requested</label><input class="ssf-input" placeholder="Ni, Fe, Au, Cu, ..."/></div>
-                <div class="ssf-field"><label>Keterangan Tambahan / Additional Remarks</label><input class="ssf-input" placeholder="Instruksi khusus..."/></div>
-            </div>
-        </div>
-
-        <!-- SEKSI D: PERNYATAAN -->
-        <div class="ssf-disclaimer">
-            <strong>PERNYATAAN / DECLARATION:</strong> Saya yang bertanda tangan di bawah ini menyatakan bahwa
-            sampel yang diserahkan adalah benar dan sesuai dengan keterangan yang tercantum di atas.
-            Pengambilan sampel tidak dilakukan oleh LabMineral Pro. Hasil analisa hanya berlaku untuk
-            sampel yang diserahkan. / <em>I hereby declare that the samples submitted are genuine and
-            correspond to the descriptions above. Sample collection was not performed by LabMineral Pro.
-            Results are valid only for submitted samples.</em>
-        </div>
-
-        <!-- TANDA TANGAN -->
-        <div class="ssf-sign">
-            <div class="ssf-sign-box">
-                <div class="sign-label">Diserahkan oleh / Submitted by</div>
-                <div class="sign-line">Nama / Name: ___________________</div>
-                <div class="sign-line" style="margin-top:4px">Jabatan / Position: ___________________</div>
-                <div class="sign-line" style="margin-top:4px">Tanda Tangan / Signature: ___________________</div>
-            </div>
-            <div class="ssf-sign-box" style="margin-left:auto">
-                <div class="sign-label">Diterima oleh / Received by</div>
-                <div class="sign-line">Nama / Name: ___________________</div>
-                <div class="sign-line" style="margin-top:4px">Jabatan / Position: ___________________</div>
-                <div class="sign-line" style="margin-top:4px">Tanda Tangan / Signature: ___________________</div>
-            </div>
-        </div>
-
-        <!-- FOOTER -->
-        <div class="ssf-footer">
-            <span>LabMineral Pro v2.0.0 &bull; Form No: ${noForm} &bull; Digenerate: ${new Date().toLocaleDateString('id-ID')}</span>
-            <span>Halaman 1 / 1</span>
-        </div>
-    </div>`;
-
-    const container = document.getElementById('ssfPreview');
-    if (container) container.innerHTML = html;
-    if (noRec) {
-        setTimeout(() => window.print(), 400);
-    }
-}
-
-function cetakSSF(noRec, klien, tgl, jml) {
-    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    const tabEl = document.getElementById('tab-ssf');
-    if (tabEl) tabEl.classList.add('active');
-    document.querySelectorAll('.tab-btn').forEach(b => {
-        if (b.textContent.includes('Sample Submission')) b.classList.add('active');
-    });
-    history.replaceState(null, '', '?tab=ssf');
-    setTimeout(() => {
-        generateSSF(noRec, klien, tgl, jml);
-        setTimeout(() => window.print(), 700);
-    }, 150);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    if ('<?= $tab ?>' === 'ssf') generateSSF();
-});
 </script>
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 =======
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 >>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
+=======
+<?php require_once __DIR__ . '/includes/footer.php'; ?>
+
+<?php require_once __DIR__ . '/includes/footer.php'; ?>
+>>>>>>> 04827f0 (Monitoring sample, preparasi opsi, konfirm admin done!!!)

@@ -197,7 +197,9 @@ function renderSubmissionList($submissions) {
                 
                 <div style="margin-top:16px;display:flex;gap:10px;justify-content:flex-end">
                     <?php if ($sub['status'] === 'pending'): ?>
-						<button onclick="updateStatus(<?= $sub['id'] ?>, 'diterima')" class="btn btn-green btn-sm">✅ Terima</button>
+						<a href="<?= BASE_URL ?>/penerimaan.php?process_submission=<?= $sub['id'] ?>" 
+                           onclick="return confirm('Terima submission ini dan proses ke penerimaan?')"
+                           class="btn btn-green btn-sm">✅ Terima</a>
 						<button onclick="updateStatus(<?= $sub['id'] ?>, 'ditolak')" class="btn btn-red btn-sm">❌ Tolak</button>
 					<?php elseif ($sub['status'] === 'diterima'): ?>
 						<button onclick="location.href='<?= BASE_URL ?>/penerimaan.php?process_submission=<?= $sub['id'] ?>'" class="btn btn-gold btn-sm">📦 Proses ke Penerimaan</button>

@@ -93,7 +93,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <button type="submit" class="btn-login">🔐 Masuk</button>
   </form>
-  <p class="hint">Default: admin / password</p>
+  <div style="text-align:center;margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
+      <p style="color:var(--text3);font-size:.8rem;margin-bottom:8px">Anda Klien? Kirim sampel di sini:</p>
+      <a href="<?= BASE_URL ?>/ssf.php" class="btn-login" 
+         style="display:block;background:var(--green3);color:white;text-decoration:none;font-weight:600">
+         📋 Sample Submission Form (SSF)
+      </a>
+  </div>
+  <p class="hint">Default: admin / admin123</p>
 </div>
 </body>
 </html>

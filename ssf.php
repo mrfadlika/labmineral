@@ -1,6 +1,6 @@
 <?php
 // ============================================================
-//  submit_sampel.php — Form Pengiriman Sampel untuk Klien
+//  ssf.php — Form Pengiriman Sampel untuk Klien
 //  Halaman publik, TIDAK PERLU LOGIN
 // ============================================================
 session_start();
@@ -9,11 +9,8 @@ require_once __DIR__ . '/config/db.php';
 $pageTitle = 'Form Pengiriman Sampel';
 $msg = $_SESSION['msg'] ?? ''; unset($_SESSION['msg']);
 $success = $_SESSION['success'] ?? ''; unset($_SESSION['success']);
-<<<<<<< HEAD
 $submissionNo = $_SESSION['submission_no'] ?? ''; unset($_SESSION['submission_no']);
 $clientCredentials = $_SESSION['client_credentials'] ?? null; unset($_SESSION['client_credentials']);
-=======
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
 
 $materialOpts = ['Bijih Emas','Nikel Laterit','Tembaga','Bauksit','Bijih Besi','Timbal/Seng','Mangan','Kromit','Lainnya'];
 $metodeOpts   = ['AAS','XRF','ICP-OES','Gravimetri','Fire Assay','Volumetri'];
@@ -29,8 +26,8 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $pageTitle ?> - Aispektra Laboratory</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet"> rel="stylesheet">
+    <title>Sample Submission Form (SSF) — Aispektra Laboratory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-deep:    #070f09;
@@ -367,9 +364,22 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
         }
 
         @media (max-width: 768px) {
-            .form-row { grid-template-columns: 1fr; gap: 0; }
-            .card { padding: 20px 18px; }
             .header h1 { font-size: 22px; }
+            .card { padding: 20px 18px; }
+        }
+
+        /* ── PRINT STYLES (SSF TEMPLATE) ── */
+        @media print {
+            body { background: white !important; padding: 0 !important; color: black !important; }
+            .container { max-width: 100% !important; margin: 0 !important; }
+            .header, .form-actions, .footer, .btn, .add-sample-area, .alert, .success-card p, .success-card button, .success-card .big-check { display: none !important; }
+            .success-card { display: block !important; padding: 0 !important; border: none !important; }
+            .success-card h2::before { content: "SAMPLE SUBMISSION FORM (SSF)"; display: block; font-size: 20pt; margin-bottom: 10pt; color: black; font-family: serif; border-bottom: 2px solid black; padding-bottom: 5pt; }
+            .success-card h2 { font-size: 0 !important; margin-bottom: 20pt !important; }
+            .submission-number { display: block !important; border: 1px solid black !important; padding: 10pt !important; font-size: 14pt !important; margin: 10pt 0 !important; }
+            
+            .card { border: 1px solid #ccc !important; break-inside: avoid; }
+            .card-title { border-bottom: 1px solid #ccc !important; color: black !important; }
         }
     </style>
 </head>
@@ -378,8 +388,8 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
 
         <div class="header">
             <div class="header-logo">
-                <span class="icon">🔬</span>
-                <h1>AISPEKTRA<br>LABORATORY</h1>
+                <span class="icon">📋</span>
+                <h1>SAMPLE SUBMISSION<br>FORM (SSF)</h1>
             </div>
             <p class="subtitle">Sistem Informasi Laboratorium Uji Mineral &amp; Logam</p>
         </div>
@@ -391,28 +401,30 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
         <?php if ($success): ?>
             <div class="alert alert-success">✅ <?= htmlspecialchars($success) ?></div>
             <div class="card success-card">
-                <div class="big-check">✅</div>
-                <h2>Pengajuan Berhasil Dikirim</h2>
+                <div class="big-check">✓</div>
+                <h2>SSF Berhasil Terkirim!</h2>
                 <p>Terima kasih telah mengirimkan sampel Anda. Formulir Anda telah kami terima.</p>
-<<<<<<< HEAD
-                <div class="submission-number"><?= htmlspecialchars($submissionNo ?: $noAuto) ?></div>
-                <p>Petugas kami akan segera memproses pengiriman Anda.</p>
+                <div class="submission-number" id="noSsf"><?= htmlspecialchars($submissionNo ?: $noAuto) ?></div>
+                <p>Silakan unduh atau cetak formulir ini sebagai bukti pengiriman fisik.</p>
+                
                 <?php if ($clientCredentials): ?>
-                    <div style="margin:22px auto 0;max-width:460px;text-align:left;background:var(--bg-base);border:1px solid var(--gold-dim);border-radius:10px;padding:18px 20px">
+                    <div style="margin:22px auto 0;max-width:460px;text-align:center;background:rgba(232,180,0,0.05);border:1px dashed var(--gold-dim);border-radius:10px;padding:18px 20px">
                         <div style="color:var(--gold);font-weight:700;margin-bottom:10px">Akun Monitoring Sampel</div>
-                        <p style="margin-bottom:8px;color:var(--text-muted)">Gunakan akun ini untuk memantau status sampel dan melihat invoice saat pengujian selesai.</p>
-                        <div style="display:grid;grid-template-columns:110px 1fr;gap:8px;font-size:14px;color:var(--text-main)">
-                            <span>Username</span><strong><?= htmlspecialchars($clientCredentials['username']) ?></strong>
-                            <span>Password</span><strong><?= htmlspecialchars($clientCredentials['password']) ?></strong>
-                        </div>
-                        <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary" style="display:inline-block;text-decoration:none;margin-top:16px">Masuk ke Monitoring</a>
+                        <p style="margin-bottom:0;color:var(--text-muted);font-size:13px">
+                            Akun monitoring Anda telah berhasil dibuat. Informasi <strong>Username & Password</strong> akan dikirimkan oleh petugas kami melalui nomor WhatsApp yang Anda daftarkan.
+                        </p>
                     </div>
                 <?php endif; ?>
-=======
-                <div class="submission-number"><?= htmlspecialchars($noAuto) ?></div>
-                <p>Petugas kami akan segera memproses pengiriman Anda.</p>
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
-                <button onclick="window.location.reload()" class="btn btn-primary" style="margin-top:22px">⊕ Kirim Form Baru</button>
+
+                <div style="display:flex;gap:12px;justify-content:center;margin:22px 0">
+                    <button onclick="window.location.reload()" class="btn btn-secondary">⊕ Kirim Form Baru</button>
+                    <button onclick="window.print()" class="btn btn-primary">🖨️ Cetak / Simpan SSF</button>
+                </div>
+
+                <!-- Hidden Professional SSF for Printing -->
+                <div id="ssfPrintArea" style="display:none">
+                    <?php include __DIR__ . '/includes/ssf_template.php'; ?>
+                </div>
             </div>
         <?php else: ?>
 
@@ -589,8 +601,4 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
         document.addEventListener('DOMContentLoaded', () => addSampleRow());
     </script>
 </body>
-<<<<<<< HEAD
 </html>
-=======
-</html>
->>>>>>> 50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8
