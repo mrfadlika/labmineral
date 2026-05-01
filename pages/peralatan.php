@@ -3,13 +3,13 @@
 //  peralatan.php
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 // Cek akses
 if (!canAccessPeralatan()) {
     $_SESSION['msg'] = 'ERROR: Anda tidak memiliki akses ke halaman Peralatan.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -34,7 +34,7 @@ $jadwal = $pdo->query(
 
 $statusOpts = ['tersedia','digunakan','maintenance','rusak'];
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <div class="sec-title">Kondisi &amp; Manajemen Peralatan</div>
@@ -149,4 +149,4 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

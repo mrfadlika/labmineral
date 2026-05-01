@@ -3,7 +3,7 @@
 //  monitoring.php — Monitoring Alur & Status Sampel Real-time
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 $pageTitle = 'Monitoring Sampel';
@@ -44,7 +44,7 @@ $sql = "
 ";
 $batches = $pdo->query($sql)->fetchAll();
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -238,4 +238,4 @@ require_once __DIR__ . '/includes/header.php';
 </div>
 <?php endforeach; ?>
 
-<?php require_once __DIR__ . '/includes/header.php'; ?>
+<?php require_once __DIR__ . '/../includes/header.php'; ?>

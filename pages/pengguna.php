@@ -4,13 +4,13 @@
 //  HANYA ADMIN yang dapat mengakses
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 // Hanya admin yang boleh akses
 if (!isAdmin()) {
     $_SESSION['msg'] = 'ERROR: Hanya Administrator yang dapat mengakses halaman ini.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -19,7 +19,7 @@ $msg = $_SESSION['msg'] ?? ''; unset($_SESSION['msg']);
 
 $list = $pdo->query("SELECT * FROM pengguna ORDER BY role, nama")->fetchAll();
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="sec-title">Manajemen Pengguna</div>
 <?php if ($msg): ?>
@@ -87,4 +87,4 @@ require_once __DIR__ . '/includes/header.php';
         </form>
     </div>
 </div>
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

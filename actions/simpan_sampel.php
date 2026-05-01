@@ -7,7 +7,7 @@ require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 $action   = $_POST['action'] ?? 'tambah';
-$redirect = $_POST['redirect'] ?? BASE_URL . '/sampel.php?tab=daftar';
+$redirect = $_POST['redirect'] ?? BASE_URL . '/pages/sampel.php?tab=daftar';
 
 // ── Update status satu sampel ────────────────────────────────
 if ($action === 'update_status') {
@@ -59,7 +59,7 @@ if ($action === 'update_status') {
     }
 
     $_SESSION['msg'] = "Sampel $kode berhasil disimpan.";
-    $redirect = BASE_URL . '/sampel.php?tab=daftar';
+    $redirect = BASE_URL . '/pages/sampel.php?tab=daftar';
 }
 
 header('Location: ' . $redirect);

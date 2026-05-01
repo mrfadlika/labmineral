@@ -9,14 +9,14 @@ require_once __DIR__ . '/../config/db.php';
 // Hanya admin yang boleh akses
 if (!isAdmin()) {
     $_SESSION['msg'] = 'ERROR: Anda tidak memiliki izin.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
 // Validasi password
 if ($_POST['password'] !== $_POST['password2']) {
     $_SESSION['msg'] = 'ERROR: Password dan konfirmasi tidak cocok.';
-    header('Location: ' . BASE_URL . '/pengguna.php');
+    header('Location: ' . BASE_URL . '/pages/pengguna.php');
     exit;
 }
 
@@ -25,7 +25,7 @@ $cek = $pdo->prepare("SELECT id FROM pengguna WHERE username = ?");
 $cek->execute([trim($_POST['username'])]);
 if ($cek->fetch()) {
     $_SESSION['msg'] = 'ERROR: Username sudah digunakan.';
-    header('Location: ' . BASE_URL . '/pengguna.php');
+    header('Location: ' . BASE_URL . '/pages/pengguna.php');
     exit;
 }
 
@@ -44,5 +44,5 @@ $pdo->prepare(
 ]);
 
 $_SESSION['msg'] = 'Pengguna baru berhasil ditambahkan.';
-header('Location: ' . BASE_URL . '/pengguna.php');
+header('Location: ' . BASE_URL . '/pages/pengguna.php');
 exit;

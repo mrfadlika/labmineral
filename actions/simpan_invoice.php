@@ -8,7 +8,7 @@ cekLogin();
 
 if (!isAdmin()) {
     $_SESSION['msg'] = 'ERROR: Hanya Administrator yang dapat mengubah invoice.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -21,7 +21,7 @@ if ($action === 'buat') {
 
     if (empty(array_filter($items, fn($it) => !empty($it['deskripsi'])))) {
         $_SESSION['msg'] = 'ERROR: Minimal satu item tagihan harus diisi.';
-        header('Location: '.BASE_URL.'/invoice.php?tab=buat'); exit;
+        header('Location: '.BASE_URL.'/pages/invoice.php?tab=buat'); exit;
     }
 
     try {
@@ -81,7 +81,7 @@ if ($action === 'buat') {
         if ($pdo->inTransaction()) $pdo->rollBack();
         $_SESSION['msg'] = 'ERROR: '.$e->getMessage();
     }
-    header('Location: '.BASE_URL.'/invoice.php?tab=daftar'); exit;
+    header('Location: '.BASE_URL.'/pages/invoice.php?tab=daftar'); exit;
 }
 
 // ── Terbitkan invoice ────────────────────────────────────────
@@ -89,7 +89,7 @@ if ($action === 'terbitkan') {
     $pdo->prepare("UPDATE invoice SET status='diterbitkan' WHERE id=?")
         ->execute([(int)$_POST['id']]);
     $_SESSION['msg'] = 'Invoice diterbitkan.';
-    header('Location: '.BASE_URL.'/invoice.php'); exit;
+    header('Location: '.BASE_URL.'/pages/invoice.php'); exit;
 }
 
 // ── Tandai lunas ──────────────────────────────────────────────
@@ -109,7 +109,7 @@ if ($action === 'lunas') {
     if ($deleted > 0) {
         $_SESSION['msg'] .= " $deleted akun client selesai dan otomatis dihapus.";
     }
-    header('Location: '.BASE_URL.'/invoice.php'); exit;
+    header('Location: '.BASE_URL.'/pages/invoice.php'); exit;
 }
 
 // ── Batalkan ─────────────────────────────────────────────────
@@ -117,7 +117,7 @@ if ($action === 'batalkan') {
     $pdo->prepare("UPDATE invoice SET status='dibatalkan' WHERE id=?")
         ->execute([(int)$_POST['id']]);
     $_SESSION['msg'] = 'Invoice dibatalkan.';
-    header('Location: '.BASE_URL.'/invoice.php'); exit;
+    header('Location: '.BASE_URL.'/pages/invoice.php'); exit;
 }
 
 // ── Tambah / update tarif ────────────────────────────────────
@@ -133,7 +133,7 @@ if ($action === 'tarif') {
         $_POST['satuan'] ?? 'per parameter',
     ]);
     $_SESSION['msg'] = 'Tarif berhasil ditambahkan.';
-    header('Location: '.BASE_URL.'/invoice.php?tab=tarif'); exit;
+    header('Location: '.BASE_URL.'/pages/invoice.php?tab=tarif'); exit;
 }
 
-header('Location: '.BASE_URL.'/invoice.php'); exit;
+header('Location: '.BASE_URL.'/pages/invoice.php'); exit;

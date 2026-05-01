@@ -21,7 +21,7 @@ if ($action === 'input' || !$action) {
 
     if (!$sampelId) {
         $_SESSION['msg'] = 'ERROR: Data preparasi tidak valid.';
-        header('Location: '.BASE_URL.'/qc.php'); exit;
+        header('Location: '.BASE_URL.'/pages/qc.php'); exit;
     }
 
     $nilaiQc   = (float)($_POST['nilai_qc']       ?? 0);
@@ -57,7 +57,7 @@ if ($action === 'input' || !$action) {
     $flagMsg = strtoupper($flag);
     $_SESSION['msg'] = "Data QC berhasil disimpan. Flag: $flagMsg"
         . ($recPct !== null ? " | Recovery: ".number_format($recPct,1)."%" : "");
-    header('Location: '.BASE_URL.'/qc.php?tab=dashboard'); exit;
+    header('Location: '.BASE_URL.'/pages/qc.php?tab=dashboard'); exit;
 }
 
 // ── Review QC oleh supervisor ────────────────────────────────
@@ -72,7 +72,7 @@ if ($action === 'review') {
     )->execute([$keputusan, $reviewer, $catatan, $qcId]);
 
     $_SESSION['msg'] = 'QC berhasil di-review: '.strtoupper($keputusan).'.';
-    header('Location: '.BASE_URL.'/qc.php?tab=review'); exit;
+    header('Location: '.BASE_URL.'/pages/qc.php?tab=review'); exit;
 }
 
-header('Location: '.BASE_URL.'/qc.php'); exit;
+header('Location: '.BASE_URL.'/pages/qc.php'); exit;

@@ -28,5 +28,5 @@ if ($action === 'update_status') {
     $_SESSION['msg'] = 'Peralatan baru berhasil ditambahkan.';
 }
 
-header('Location: ' . BASE_URL . '/peralatan.php');
+header('Location: ' . BASE_URL . '/pages/peralatan.php');
 exit;

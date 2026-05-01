@@ -3,7 +3,7 @@
 //  sampel.php — Manajemen Sampel
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 $pageTitle = 'Manajemen Sampel';
 
@@ -71,7 +71,7 @@ $materialOpts = ['Bijih Emas','Nikel Laterit','Tembaga','Bauksit','Bijih Besi','
 $metodeOpts   = ['AAS','XRF','ICP-OES','Gravimetri','Fire Assay','Volumetri'];
 $statusOpts   = ['antrian','diuji','review','selesai','ditolak'];
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -198,7 +198,7 @@ require_once __DIR__ . '/includes/header.php';
             </select>
             <button type="button" class="btn btn-gold btn-sm" onclick="massUpdate()">&#10003; Terapkan</button>
         </form>
-        <a id="btnGoUji" href="<?= BASE_URL ?>/pengujian.php" class="btn btn-green btn-sm">&#128300; Input Hasil Uji</a>
+        <a id="btnGoUji" href="<?= BASE_URL ?>/pages/pengujian.php" class="btn btn-green btn-sm">&#128300; Input Hasil Uji</a>
         <button type="button" class="btn btn-sm" style="background:var(--bg3);color:var(--text3);border:1px solid var(--border)" onclick="clearSel()">&#10005; Batal</button>
     </div>
 
@@ -253,7 +253,7 @@ require_once __DIR__ . '/includes/header.php';
                     </form>
                 </td>
                 <td><?php if ($s['jumlah_uji']): ?><span style="font-size:.75rem;color:<?= $s['jumlah_tlulus']?'var(--red)':'var(--green)' ?>"><?= $s['jumlah_lulus'] ?>L/<?= $s['jumlah_tlulus'] ?>TL</span><?php else: ?><span style="color:var(--text3)">—</span><?php endif; ?></td>
-                <td><a href="<?= BASE_URL ?>/pengujian.php?sampel_id=<?= $s['id'] ?>" class="btn btn-green btn-sm" style="font-size:.68rem;padding:3px 8px">&#128300; Uji</a></td>
+                <td><a href="<?= BASE_URL ?>/pages/pengujian.php?sampel_id=<?= $s['id'] ?>" class="btn btn-green btn-sm" style="font-size:.68rem;padding:3px 8px">&#128300; Uji</a></td>
             </tr>
             <?php endforeach; ?>
         <?php endforeach; ?>
@@ -279,7 +279,7 @@ require_once __DIR__ . '/includes/header.php';
                 </form>
             </td>
             <td><?php if ($s['jumlah_uji']): ?><span style="font-size:.75rem;color:<?= $s['jumlah_tlulus']?'var(--red)':'var(--green)' ?>"><?= $s['jumlah_lulus'] ?>L/<?= $s['jumlah_tlulus'] ?>TL</span><?php else: ?><span style="color:var(--text3)">—</span><?php endif; ?></td>
-            <td><a href="<?= BASE_URL ?>/pengujian.php?sampel_id=<?= $s['id'] ?>" class="btn btn-green btn-sm" style="font-size:.68rem;padding:3px 8px">&#128300; Uji</a></td>
+            <td><a href="<?= BASE_URL ?>/pages/pengujian.php?sampel_id=<?= $s['id'] ?>" class="btn btn-green btn-sm" style="font-size:.68rem;padding:3px 8px">&#128300; Uji</a></td>
         </tr>
         <?php endforeach; ?>
 
@@ -291,7 +291,7 @@ require_once __DIR__ . '/includes/header.php';
     </div>
     <div style="font-size:.72rem;color:var(--text3);margin-top:8px">
         <?= count($sampelList) ?> sampel &nbsp;·&nbsp;
-        <a href="<?= BASE_URL ?>/pengujian.php" style="color:var(--green3)">&#128300; Ke Laman Pengujian</a>
+        <a href="<?= BASE_URL ?>/pages/pengujian.php" style="color:var(--green3)">&#128300; Ke Laman Pengujian</a>
     </div>
 </div>
 
@@ -588,7 +588,7 @@ require_once __DIR__ . '/includes/header.php';
                 <td><?= bersihkan($b['klien']) ?></td>
                 <td><?= date('d/m/Y',strtotime($b['tanggal_masuk'])) ?></td>
                 <td><?= badgeStatus($b['status']) ?></td>
-                <td><a href="<?= BASE_URL ?>/pengujian.php" class="btn btn-gold btn-sm" style="font-size:.68rem">&#128300; Input Uji</a></td>
+                <td><a href="<?= BASE_URL ?>/pages/pengujian.php" class="btn btn-gold btn-sm" style="font-size:.68rem">&#128300; Input Uji</a></td>
             </tr>
             <?php endforeach; ?>
             </tbody>
@@ -836,7 +836,7 @@ function updateSel() {
     const ids = Array.from(checked).map(c=>c.value).join(',');
     document.getElementById('massIds').value = ids;
     const params = ids.split(',').filter(Boolean).map(id=>'sampel_id[]='+id).join('&');
-    document.getElementById('btnGoUji').href = '<?= BASE_URL ?>/pengujian.php?' + params;
+    document.getElementById('btnGoUji').href = '<?= BASE_URL ?>/pages/pengujian.php?' + params;
 }
 
 function toggleAll(el) {
@@ -861,4 +861,4 @@ function massUpdate() {
 }
 </script>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

@@ -4,7 +4,7 @@ require_once 'config/db.php';
 
 // Jika sudah login, redirect ke dashboard
 if (!empty($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -29,8 +29,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$user['id']]);
             
             $redirect = normalizeRole($user['role']) === 'client'
-                ? BASE_URL . '/client_monitoring.php'
-                : BASE_URL . '/dashboard.php';
+                ? BASE_URL . '/pages/client_monitoring.php'
+                : BASE_URL . '/pages/dashboard.php';
             header('Location: ' . $redirect);
             exit;
         } else {
@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   </form>
   <div style="text-align:center;margin-top:20px;border-top:1px solid var(--border);padding-top:16px">
       <p style="color:var(--text3);font-size:.8rem;margin-bottom:8px">Anda Klien? Kirim sampel di sini:</p>
-      <a href="<?= BASE_URL ?>/ssf.php" class="btn-login" 
+      <a href="<?= BASE_URL ?>/pages/ssf.php" class="btn-login" 
          style="display:block;background:var(--green3);color:white;text-decoration:none;font-weight:600">
          📋 Sample Submission Form (SSF)
       </a>

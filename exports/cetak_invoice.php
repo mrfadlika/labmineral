@@ -7,7 +7,7 @@ require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 $id = (int)($_GET['id'] ?? 0);
-if (!$id) { header('Location: '.BASE_URL.'/invoice.php'); exit; }
+if (!$id) { header('Location: '.BASE_URL.'/pages/invoice.php'); exit; }
 
 // ── Ambil data invoice ───────────────────────────────────────
 $stInv = $pdo->prepare(
@@ -19,11 +19,11 @@ $stInv = $pdo->prepare(
 );
 $stInv->execute([$id]);
 $inv = $stInv->fetch();
-if (!$inv) { header('Location: '.BASE_URL.'/invoice.php'); exit; }
+if (!$inv) { header('Location: '.BASE_URL.'/pages/invoice.php'); exit; }
 
 if (isClient() && (!in_array($inv['status'], ['diterbitkan','lunas'], true) || !clientCanAccessInvoice($pdo, $id, (int)$_SESSION['user_id']))) {
     $_SESSION['msg'] = 'ERROR: Invoice tidak tersedia untuk akun ini.';
-    header('Location: '.BASE_URL.'/client_monitoring.php');
+    header('Location: '.BASE_URL.'/pages/client_monitoring.php');
     exit;
 }
 

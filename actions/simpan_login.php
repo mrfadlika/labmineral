@@ -36,7 +36,7 @@ if ($user && password_verify($password, $user['password'])) {
         // Abaikan jika tabel tidak ada
     }
     
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 } else {
     $_SESSION['msg'] = 'ERROR: Username atau password salah.';

@@ -4,12 +4,12 @@
 //  HANYA ADMIN yang dapat mengakses
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 if (!isAdmin()) {
     $_SESSION['msg'] = 'ERROR: Hanya Administrator yang dapat mengakses halaman ini.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -36,7 +36,7 @@ $pending = $pdo->query("SELECT COUNT(*) FROM submission_sampel WHERE status='pen
 $diterima = $pdo->query("SELECT COUNT(*) FROM submission_sampel WHERE status='diterima'")->fetchColumn();
 $ditolak = $pdo->query("SELECT COUNT(*) FROM submission_sampel WHERE status='ditolak'")->fetchColumn();
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -252,7 +252,7 @@ function renderSubmissionList($submissions) {
                         <button onclick="updateStatus(<?= $sub['id'] ?>, 'diterima')" class="btn btn-green btn-sm">Terima</button>
                         <button onclick="updateStatus(<?= $sub['id'] ?>, 'ditolak')" class="btn btn-red btn-sm">Tolak</button>
                     <?php elseif ($sub['status'] === 'diterima'): ?>
-                        <button onclick="location.href='<?= BASE_URL ?>/penerimaan.php?process_submission=<?= $sub['id'] ?>'" class="btn btn-gold btn-sm">Proses ke Penerimaan</button>
+                        <button onclick="location.href='<?= BASE_URL ?>/pages/penerimaan.php?process_submission=<?= $sub['id'] ?>'" class="btn btn-gold btn-sm">Proses ke Penerimaan</button>
                     <?php endif; ?>
                 </div>
             </div>
@@ -262,4 +262,4 @@ function renderSubmissionList($submissions) {
 }
 ?>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

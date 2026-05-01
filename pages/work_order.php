@@ -5,13 +5,13 @@
 //          Relasi N sampel via tabel pivot work_order_sampel
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 // Cek akses
 if (!canAccessWorkOrder()) {
     $_SESSION['msg'] = 'ERROR: Anda tidak memiliki akses ke halaman Work Order.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -149,7 +149,7 @@ $statSelesai = $pdo->query("SELECT COUNT(*) FROM work_order WHERE status='selesa
 
 $metodeOpts = ['AAS','XRF','ICP-OES','Gravimetri','Fire Assay','Volumetri'];
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -360,9 +360,9 @@ require_once __DIR__ . '/includes/header.php';
                         <button type="submit" class="btn btn-gold btn-sm">&#9654; Aktifkan WO</button>
                     </form>
                 <?php elseif ($w['status'] === 'aktif'): ?>
-                    <a href="<?= BASE_URL ?>/preparasi.php?wo_id=<?= $w['id'] ?>"
+                    <a href="<?= BASE_URL ?>/pages/preparasi.php?wo_id=<?= $w['id'] ?>"
                        class="btn btn-green btn-sm">&#128300; Input Preparasi</a>
-                    <a href="<?= BASE_URL ?>/pengujian.php?wo_id=<?= $w['id'] ?>&tab=input"
+                    <a href="<?= BASE_URL ?>/pages/pengujian.php?wo_id=<?= $w['id'] ?>&tab=input"
                        class="btn btn-gold btn-sm">&#128202; Input Hasil Uji</a>
                     <form method="POST" action="<?= BASE_URL ?>/actions/simpan_work_order.php" style="display:inline">
                         <input type="hidden" name="action" value="selesaikan"/>
@@ -372,7 +372,7 @@ require_once __DIR__ . '/includes/header.php';
                         </button>
                     </form>
                 <?php elseif ($w['status'] === 'selesai'): ?>
-                    <a href="<?= BASE_URL ?>/qc.php?wo_id=<?= $w['id'] ?>"
+                    <a href="<?= BASE_URL ?>/pages/qc.php?wo_id=<?= $w['id'] ?>"
                        class="btn btn-sm" style="background:var(--bg3);border:1px solid var(--border);color:var(--text2)">
                         &#128300; Lihat QC Report
                     </a>
@@ -762,4 +762,4 @@ function onPenerimaanChange(sel) {
 }
 </script>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

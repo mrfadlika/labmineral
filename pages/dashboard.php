@@ -4,11 +4,11 @@
 //  UPDATE: Layout notifikasi di sebelah kanan, sejajar dengan stok bahan
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 if (isClient()) {
-    header('Location: ' . BASE_URL . '/client_monitoring.php');
+    header('Location: ' . BASE_URL . '/pages/client_monitoring.php');
     exit;
 }
 
@@ -148,7 +148,7 @@ if (isAnalis()) {
     ];
 }
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -762,16 +762,16 @@ require_once __DIR__ . '/includes/header.php';
                     <?php endif; ?>
                 </div>
                 <div class="wo-action">
-                    <a href="<?= BASE_URL ?>/preparasi.php?wo_id=<?= $wo['id'] ?>" class="btn-notif btn-notif-primary">⚗️ Preparasi</a>
-                    <a href="<?= BASE_URL ?>/pengujian.php?wo_id=<?= $wo['id'] ?>&tab=batch" class="btn-notif btn-notif-primary">🔬 Hasil Uji</a>
-                    <a href="<?= BASE_URL ?>/work_order.php?tab=daftar" class="btn-notif btn-notif-secondary">📋 Detail</a>
+                    <a href="<?= BASE_URL ?>/pages/preparasi.php?wo_id=<?= $wo['id'] ?>" class="btn-notif btn-notif-primary">⚗️ Preparasi</a>
+                    <a href="<?= BASE_URL ?>/pages/pengujian.php?wo_id=<?= $wo['id'] ?>&tab=batch" class="btn-notif btn-notif-primary">🔬 Hasil Uji</a>
+                    <a href="<?= BASE_URL ?>/pages/work_order.php?tab=daftar" class="btn-notif btn-notif-secondary">📋 Detail</a>
                 </div>
             </div>
             <?php endforeach; ?>
         </div>
         <?php if ($woCount > 3): ?>
         <div class="view-all-link">
-            <a href="<?= BASE_URL ?>/work_order.php?tab=daftar">Lihat semua tugas →</a>
+            <a href="<?= BASE_URL ?>/pages/work_order.php?tab=daftar">Lihat semua tugas →</a>
         </div>
         <?php endif; ?>
         <?php else: ?>
@@ -830,4 +830,4 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

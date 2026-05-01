@@ -45,7 +45,7 @@ if ($modeInput === 'wo' && $woId) {
 if (empty($sampelIds)) {
     $_SESSION['msg'] = 'ERROR: Tidak ada sampel yang dipilih. '
                      . 'Pilih Work Order atau sampel terlebih dahulu.';
-    header('Location: ' . BASE_URL . '/preparasi.php?tab=input');
+    header('Location: ' . BASE_URL . '/pages/preparasi.php?tab=input');
     exit;
 }
 
@@ -183,5 +183,5 @@ try {
     $_SESSION['msg'] = 'ERROR: ' . $e->getMessage();
 }
 
-header('Location: ' . BASE_URL . '/preparasi.php?tab=daftar');
+header('Location: ' . BASE_URL . '/pages/preparasi.php?tab=daftar');
 exit;

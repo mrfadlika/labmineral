@@ -4,13 +4,13 @@
 //  UPDATE: Role-based access - Analis full, Admin/Supervisor read only
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 // Cek akses
 if (!canAccessQC()) {
     $_SESSION['msg'] = 'ERROR: Anda tidak memiliki akses ke halaman QC.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -72,7 +72,7 @@ $supervisorList = $pdo->query(
     "SELECT id, nama FROM pengguna WHERE role='admin' AND status='aktif'"
 )->fetchAll();
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -451,4 +451,4 @@ function hitungRecovery() {
 }
 </script>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

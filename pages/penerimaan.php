@@ -4,13 +4,13 @@
 //  UPDATE: Dapat mengambil data dari submission yang diterima
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 // Hanya admin yang boleh mengakses
 if (!isAdmin()) {
     $_SESSION['msg'] = 'ERROR: Hanya Administrator yang dapat mengakses halaman Penerimaan Sampel.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -25,7 +25,7 @@ $processSubmission = (int)($_GET['process_submission'] ?? 0);
 if ($processSubmission) {
     if (!$submissionTablesReady) {
         $_SESSION['msg'] = 'ERROR: Tabel submission belum tersedia. Jalankan scripts/sql/patch_client_role.sql terlebih dahulu.';
-        header('Location: ' . BASE_URL . '/penerimaan.php');
+        header('Location: ' . BASE_URL . '/pages/penerimaan.php');
         exit;
     }
 
@@ -154,28 +154,28 @@ if ($processSubmission) {
                     }
 
                     $_SESSION['msg'] = "✅ Penerimaan $noPenerimaan berhasil dibuat dari submission {$submission['nomor_submission']}. " . count($sampelDetails) . " sampel ditambahkan." . $clientMsg;
-                    header('Location: ' . BASE_URL . '/penerimaan.php?tab=daftar');
+                    header('Location: ' . BASE_URL . '/pages/penerimaan.php?tab=daftar');
                     exit;
                     
                 } catch (Exception $e) {
                     if ($pdo->inTransaction()) $pdo->rollBack();
                     $_SESSION['msg'] = 'ERROR: Gagal memproses submission. ' . $e->getMessage();
-                    header('Location: ' . BASE_URL . '/penerimaan.php');
+                    header('Location: ' . BASE_URL . '/pages/penerimaan.php');
                     exit;
                 }
             } else {
                 $_SESSION['msg'] = 'ERROR: Tidak ada detail sampel dalam submission ini.';
-                header('Location: ' . BASE_URL . '/penerimaan.php');
+                header('Location: ' . BASE_URL . '/pages/penerimaan.php');
                 exit;
             }
         } else {
             $_SESSION['msg'] = 'ERROR: Submission sudah diproses sebelumnya.';
-            header('Location: ' . BASE_URL . '/penerimaan.php');
+            header('Location: ' . BASE_URL . '/pages/penerimaan.php');
             exit;
         }
     } else {
         $_SESSION['msg'] = 'ERROR: Submission tidak ditemukan.';
-        header('Location: ' . BASE_URL . '/penerimaan.php');
+        header('Location: ' . BASE_URL . '/pages/penerimaan.php');
         exit;
     }
 }
@@ -264,7 +264,7 @@ if ($submissionTablesReady) {
     ")->fetchAll();
 }
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -498,7 +498,7 @@ require_once __DIR__ . '/includes/header.php';
                 <td><?= fmtTgl($sub['tanggal_submit']) ?></td>
                 <td style="text-align:center"><?= $sub['jumlah_sampel'] ?></td>
                 <td>
-                    <a href="<?= BASE_URL ?>/penerimaan.php?process_submission=<?= $sub['id'] ?>" 
+                    <a href="<?= BASE_URL ?>/pages/penerimaan.php?process_submission=<?= $sub['id'] ?>" 
                        class="btn btn-gold btn-sm" style="font-size:.68rem;padding:3px 8px"
                        onclick="return confirm('Proses submission ini ke penerimaan? Data akan langsung masuk ke database.')">
                         📦 Proses ke Penerimaan
@@ -657,4 +657,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 </script>
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

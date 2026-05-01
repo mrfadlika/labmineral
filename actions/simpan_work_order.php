@@ -35,7 +35,7 @@ switch ($action) {
         // ── Validasi dasar ───────────────────────────────────
         if (!$nomorWo) {
             $_SESSION['msg'] = 'ERROR: Nomor WO tidak boleh kosong.';
-            header('Location: ' . BASE_URL . '/work_order.php?tab=buat');
+            header('Location: ' . BASE_URL . '/pages/work_order.php?tab=buat');
             exit;
         }
 
@@ -44,7 +44,7 @@ switch ($action) {
         $cekDup->execute([$nomorWo]);
         if ($cekDup->fetchColumn() > 0) {
             $_SESSION['msg'] = 'ERROR: Nomor WO ' . htmlspecialchars($nomorWo) . ' sudah digunakan.';
-            header('Location: ' . BASE_URL . '/work_order.php?tab=buat');
+            header('Location: ' . BASE_URL . '/pages/work_order.php?tab=buat');
             exit;
         }
 
@@ -59,7 +59,7 @@ switch ($action) {
             $penerimaanId = intval($_POST['penerimaan_id'] ?? 0);
             if (!$penerimaanId) {
                 $_SESSION['msg'] = 'ERROR: Pilih nomor penerimaan untuk mode batch.';
-                header('Location: ' . BASE_URL . '/work_order.php?tab=buat');
+                header('Location: ' . BASE_URL . '/pages/work_order.php?tab=buat');
                 exit;
             }
 
@@ -68,7 +68,7 @@ switch ($action) {
             $cekRec->execute([$penerimaanId]);
             if (!$cekRec->fetchColumn()) {
                 $_SESSION['msg'] = 'ERROR: Nomor penerimaan tidak ditemukan.';
-                header('Location: ' . BASE_URL . '/work_order.php?tab=buat');
+                header('Location: ' . BASE_URL . '/pages/work_order.php?tab=buat');
                 exit;
             }
 
@@ -89,7 +89,7 @@ switch ($action) {
 
             if (empty($sampelIds)) {
                 $_SESSION['msg'] = 'ERROR: Tidak ada sampel tersedia dalam batch ini (semua sudah punya WO aktif).';
-                header('Location: ' . BASE_URL . '/work_order.php?tab=buat');
+                header('Location: ' . BASE_URL . '/pages/work_order.php?tab=buat');
                 exit;
             }
 
@@ -130,7 +130,7 @@ switch ($action) {
 
             if (empty($sampelIds)) {
                 $_SESSION['msg'] = 'ERROR: Pilih minimal satu sampel.';
-                header('Location: ' . BASE_URL . '/work_order.php?tab=buat');
+                header('Location: ' . BASE_URL . '/pages/work_order.php?tab=buat');
                 exit;
             }
 
@@ -170,7 +170,7 @@ switch ($action) {
             $_SESSION['msg'] = "Work Order {$nomorWo} berhasil dibuat ({$jumlah} sampel).";
         }
 
-        header('Location: ' . BASE_URL . '/work_order.php?tab=daftar');
+        header('Location: ' . BASE_URL . '/pages/work_order.php?tab=daftar');
         exit;
 
     // ─────────────────────────────────────────────────────────
@@ -180,7 +180,7 @@ switch ($action) {
         $id = intval($_POST['id'] ?? 0);
         if (!$id) {
             $_SESSION['msg'] = 'ERROR: ID WO tidak valid.';
-            header('Location: ' . BASE_URL . '/work_order.php');
+            header('Location: ' . BASE_URL . '/pages/work_order.php');
             exit;
         }
 
@@ -201,7 +201,7 @@ switch ($action) {
         $pdo->commit();
 
         $_SESSION['msg'] = 'Work Order berhasil diaktifkan.';
-        header('Location: ' . BASE_URL . '/work_order.php?tab=daftar');
+        header('Location: ' . BASE_URL . '/pages/work_order.php?tab=daftar');
         exit;
 
     // ─────────────────────────────────────────────────────────
@@ -211,7 +211,7 @@ switch ($action) {
         $id = intval($_POST['id'] ?? 0);
         if (!$id) {
             $_SESSION['msg'] = 'ERROR: ID WO tidak valid.';
-            header('Location: ' . BASE_URL . '/work_order.php');
+            header('Location: ' . BASE_URL . '/pages/work_order.php');
             exit;
         }
 
@@ -234,7 +234,7 @@ switch ($action) {
         $pdo->commit();
 
         $_SESSION['msg'] = 'Work Order berhasil ditandai selesai.';
-        header('Location: ' . BASE_URL . '/work_order.php?tab=daftar');
+        header('Location: ' . BASE_URL . '/pages/work_order.php?tab=daftar');
         exit;
 
     // ─────────────────────────────────────────────────────────
@@ -244,7 +244,7 @@ switch ($action) {
         $id = intval($_POST['id'] ?? 0);
         if (!$id) {
             $_SESSION['msg'] = 'ERROR: ID WO tidak valid.';
-            header('Location: ' . BASE_URL . '/work_order.php');
+            header('Location: ' . BASE_URL . '/pages/work_order.php');
             exit;
         }
 
@@ -267,11 +267,11 @@ switch ($action) {
         $pdo->commit();
 
         $_SESSION['msg'] = 'Work Order dibatalkan. Status sampel dikembalikan ke antrian.';
-        header('Location: ' . BASE_URL . '/work_order.php?tab=daftar');
+        header('Location: ' . BASE_URL . '/pages/work_order.php?tab=daftar');
         exit;
 
     default:
-        header('Location: ' . BASE_URL . '/work_order.php');
+        header('Location: ' . BASE_URL . '/pages/work_order.php');
         exit;
 }
 
@@ -305,7 +305,7 @@ switch ($action) {
         $_SESSION['msg'] = 'ERROR: Kesalahan database. Hubungi administrator. [Kode: ' . $errCode . ']';
     }
 
-    header('Location: ' . BASE_URL . '/work_order.php?tab=buat');
+    header('Location: ' . BASE_URL . '/pages/work_order.php?tab=buat');
     exit;
 }
 

@@ -25,7 +25,7 @@ if ($action === 'edit') {
     $tanggalUji = $_POST['tanggal_uji'] ?? date('Y-m-d');
     $kesimpulan = $_POST['kesimpulan'] ?? 'lulus';
     $catatan = trim($_POST['catatan'] ?? '');
-    $redirect = $_POST['redirect'] ?? BASE_URL . '/pengujian.php?tab=hasil';
+    $redirect = $_POST['redirect'] ?? BASE_URL . '/pages/pengujian.php?tab=hasil';
     
     if (!$id) {
         $_SESSION['msg'] = 'ERROR: ID tidak valid.';
@@ -74,7 +74,7 @@ if ($action === 'edit') {
 // INSERT HASIL UJI (yang sudah ada sebelumnya)
 // ============================================================
 $nilai    = (float)($_POST['nilai']      ?? 0);
-$redirect = $_POST['redirect'] ?? BASE_URL.'/pengujian.php?tab=hasil';
+$redirect = $_POST['redirect'] ?? BASE_URL.'/pages/pengujian.php?tab=hasil';
 $sampelId = (int)($_POST['sampel_id'] ?? 0);
 
 if (!$sampelId) {

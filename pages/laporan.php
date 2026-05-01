@@ -3,13 +3,13 @@
 //  laporan.php
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 // Cek akses laporan
 if (!canAccessLaporan()) {
     $_SESSION['msg'] = 'ERROR: Hanya Administrator dan Supervisor yang dapat mengakses Laporan.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -26,7 +26,7 @@ $klienList = $pdo->query(
     "SELECT DISTINCT klien FROM sampel WHERE klien IS NOT NULL AND klien != '' ORDER BY klien"
 )->fetchAll(PDO::FETCH_COLUMN);
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 <div class="sec-title">Laporan &amp; Export</div>
 
@@ -103,4 +103,4 @@ require_once __DIR__ . '/includes/header.php';
     </div>
 </div>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

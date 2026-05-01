@@ -15,7 +15,7 @@ $tglUji     = $_POST['tanggal_uji_all']  ?? date('Y-m-d');
 
 if (empty($rows)) {
     $_SESSION['msg'] = 'ERROR: Tidak ada data yang disimpan.';
-    header('Location: '.BASE_URL.'/pengujian.php?tab=batch'); exit;
+    header('Location: '.BASE_URL.'/pages/pengujian.php?tab=batch'); exit;
 }
 
 // Hitung berapa baris valid terlebih dahulu
@@ -25,7 +25,7 @@ $validRows = array_filter($rows, fn($r) =>
 
 if (empty($validRows)) {
     $_SESSION['msg'] = 'ERROR: Tidak ada baris valid (sampel, parameter, dan nilai wajib diisi).';
-    header('Location: '.BASE_URL.'/pengujian.php?tab=batch'); exit;
+    header('Location: '.BASE_URL.'/pages/pengujian.php?tab=batch'); exit;
 }
 
 try {
@@ -103,4 +103,4 @@ try {
     $_SESSION['msg'] = 'ERROR: '.$e->getMessage();
 }
 
-header('Location: '.BASE_URL.'/pengujian.php?tab=hasil'); exit;
+header('Location: '.BASE_URL.'/pages/pengujian.php?tab=hasil'); exit;

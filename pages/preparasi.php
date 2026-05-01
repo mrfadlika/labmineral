@@ -5,13 +5,13 @@
 //  UPDATE: Role-based access - Analis full, Admin/Supervisor read only
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 // Cek akses
 if (!canAccessPreparasi()) {
     $_SESSION['msg'] = 'ERROR: Anda tidak memiliki akses ke halaman Preparasi.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -123,7 +123,7 @@ foreach ($prepList as $p) {
 
 $metodePrepOpts = ['destruksi_asam','ekstraksi','pengenceran','fusion','lainnya'];
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -686,4 +686,4 @@ function tambahReagen() {
 }
 </script>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

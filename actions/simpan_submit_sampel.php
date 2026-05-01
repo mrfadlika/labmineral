@@ -19,13 +19,13 @@ $sampelInput = $_POST['sampel'] ?? [];
 // Validasi
 if (!$nomorSubmission || !$klien || !$kontakPerson || !$email || !$telepon || !$alamat) {
     $_SESSION['msg'] = 'ERROR: Nomor submission, nama klien, kontak person, email, telepon, dan alamat wajib diisi.';
-    header('Location: ' . BASE_URL . '/ssf.php');
+    header('Location: ' . BASE_URL . '/pages/ssf.php');
     exit;
 }
 
 if (empty($sampelInput)) {
     $_SESSION['msg'] = 'ERROR: Minimal 1 sampel harus diisi.';
-    header('Location: ' . BASE_URL . '/ssf.php');
+    header('Location: ' . BASE_URL . '/pages/ssf.php');
     exit;
 }
 
@@ -34,7 +34,7 @@ $cek = $pdo->prepare("SELECT id FROM submission_sampel WHERE nomor_submission = 
 $cek->execute([$nomorSubmission]);
 if ($cek->fetch()) {
     $_SESSION['msg'] = "ERROR: Nomor submission $nomorSubmission sudah ada.";
-    header('Location: ' . BASE_URL . '/ssf.php');
+    header('Location: ' . BASE_URL . '/pages/ssf.php');
     exit;
 }
 
@@ -101,5 +101,5 @@ try {
     $_SESSION['msg'] = 'ERROR: Gagal menyimpan data. ' . $e->getMessage();
 }
 
-header('Location: ' . BASE_URL . '/ssf.php');
+header('Location: ' . BASE_URL . '/pages/ssf.php');
 exit;

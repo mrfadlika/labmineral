@@ -4,7 +4,7 @@
 //  Halaman publik, TIDAK PERLU LOGIN
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 
 $pageTitle = 'Form Pengiriman Sampel';
 $msg = $_SESSION['msg'] ?? ''; unset($_SESSION['msg']);
@@ -423,7 +423,7 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
 
                 <!-- Hidden Professional SSF for Printing -->
                 <div id="ssfPrintArea" style="display:none">
-                    <?php include __DIR__ . '/includes/ssf_template.php'; ?>
+                    <?php include __DIR__ . '/../includes/ssf_template.php'; ?>
                 </div>
             </div>
         <?php else: ?>

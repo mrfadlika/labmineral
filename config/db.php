@@ -77,7 +77,7 @@ function cekLogin() {
     $allowedClientScripts = ['dashboard.php', 'client_monitoring.php', 'cetak_invoice.php', 'logout.php'];
 
     if ($role === 'client' && !in_array($currentScript, $allowedClientScripts, true)) {
-        header('Location: '.BASE_URL.'/client_monitoring.php');
+        header('Location: '.BASE_URL.'/pages/client_monitoring.php');
         exit;
     }
 }

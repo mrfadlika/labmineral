@@ -4,13 +4,13 @@
 //  UPDATE: Role-based access - Admin full, Supervisor read only
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 
 // Cek akses invoice
 if (!canAccessInvoice()) {
     $_SESSION['msg'] = 'ERROR: Anda tidak memiliki akses ke halaman Invoice.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -68,7 +68,7 @@ $invTerbit  = $pdo->query("SELECT COUNT(*) FROM invoice WHERE status='diterbitka
 $invLunas   = $pdo->query("SELECT COUNT(*) FROM invoice WHERE status='lunas'")->fetchColumn();
 $totalPiutang = $pdo->query("SELECT COALESCE(SUM(total),0) FROM invoice WHERE status='diterbitkan'")->fetchColumn();
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -568,4 +568,4 @@ tambahItem();
 <?php endif; ?>
 </script>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

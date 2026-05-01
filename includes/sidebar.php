@@ -36,7 +36,7 @@ $cur = basename($_SERVER['PHP_SELF']);
     </div>
     <nav>
         <?php foreach ($menu as $m): ?>
-            <a href="<?= BASE_URL ?>/<?= $m['href'] ?>"
+            <a href="<?= BASE_URL ?>/pages/<?= $m['href'] ?>"
                class="<?= $cur === $m['href'] ? 'active' : '' ?>">
                 <span class="ico"><?= $m['ico'] ?></span>
                 <?= $m['label'] ?>

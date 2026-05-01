@@ -4,7 +4,7 @@
 //  UPDATE: Tambah fungsi edit hasil uji
 // ============================================================
 session_start();
-require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/../config/db.php';
 cekLogin();
 $pageTitle = 'Pengujian';
 
@@ -91,7 +91,7 @@ $satuanOpts = ['g/t','%','mg/L','ppm','ppb','mg/kg'];
 // Cek apakah user bisa edit (semua role bisa edit pengujian)
 $canEdit = canEditPengujian();
 
-require_once __DIR__ . '/includes/header.php';
+require_once __DIR__ . '/../includes/header.php';
 ?>
 
 <style>
@@ -476,7 +476,7 @@ require_once __DIR__ . '/includes/header.php';
         <form id="editForm" method="POST" action="<?= BASE_URL ?>/actions/simpan_hasil_uji.php">
             <input type="hidden" name="action" value="edit"/>
             <input type="hidden" name="id" id="edit_id"/>
-            <input type="hidden" name="redirect" value="<?= BASE_URL ?>/pengujian.php?tab=hasil"/>
+            <input type="hidden" name="redirect" value="<?= BASE_URL ?>/pages/pengujian.php?tab=hasil"/>
             
             <div class="form-group">
                 <label>Kode Uji</label>
@@ -797,4 +797,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php require_once __DIR__ . '/includes/footer.php'; ?>
+<?php require_once __DIR__ . '/../includes/footer.php'; ?>

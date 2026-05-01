@@ -42,5 +42,5 @@ if ($existing) {
     $_SESSION['msg'] = "Bahan $kode berhasil ditambahkan.";
 }
 
-header('Location: ' . BASE_URL . '/bahan.php');
+header('Location: ' . BASE_URL . '/pages/bahan.php');
 exit;

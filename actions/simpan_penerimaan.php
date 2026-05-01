@@ -8,7 +8,7 @@ cekLogin();
 
 if (!isAdmin()) {
     $_SESSION['msg'] = 'ERROR: Hanya Administrator yang dapat mengubah penerimaan sampel.';
-    header('Location: ' . BASE_URL . '/dashboard.php');
+    header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
 
@@ -25,7 +25,7 @@ if ($action === 'update_status') {
         $_SESSION['msg'] .= " $deleted akun client selesai dan otomatis dihapus.";
     }
     
-    header('Location: ' . BASE_URL . '/penerimaan.php');
+    header('Location: ' . BASE_URL . '/pages/penerimaan.php');
     exit;
 }
 
@@ -34,7 +34,7 @@ if ($action === 'konfirmasi') {
     $pdo->prepare("UPDATE penerimaan_sampel SET is_confirmed = 1 WHERE id = ?")
         ->execute([(int)$_POST['id']]);
     $_SESSION['msg'] = 'Batch penerimaan telah dikonfirmasi oleh Admin.';
-    header('Location: ' . BASE_URL . '/penerimaan.php');
+    header('Location: ' . BASE_URL . '/pages/penerimaan.php');
     exit;
 }
 
@@ -48,13 +48,13 @@ $sampelInput  = $_POST['sampel'] ?? [];
 // Validasi minimal
 if (!$noPenerimaan || !$klien) {
     $_SESSION['msg'] = 'ERROR: Nomor penerimaan dan klien wajib diisi.';
-    header('Location: ' . BASE_URL . '/penerimaan.php');
+    header('Location: ' . BASE_URL . '/pages/penerimaan.php');
     exit;
 }
 
 if (empty($sampelInput)) {
     $_SESSION['msg'] = 'ERROR: Minimal 1 sampel harus ditambahkan.';
-    header('Location: ' . BASE_URL . '/penerimaan.php');
+    header('Location: ' . BASE_URL . '/pages/penerimaan.php');
     exit;
 }
 
@@ -63,7 +63,7 @@ $cek = $pdo->prepare("SELECT id FROM penerimaan_sampel WHERE nomor_penerimaan = 
 $cek->execute([$noPenerimaan]);
 if ($cek->fetch()) {
     $_SESSION['msg'] = "ERROR: Nomor penerimaan $noPenerimaan sudah ada.";
-    header('Location: ' . BASE_URL . '/penerimaan.php');
+    header('Location: ' . BASE_URL . '/pages/penerimaan.php');
     exit;
 }
 
@@ -151,5 +151,5 @@ try {
     $_SESSION['msg'] = 'ERROR: Gagal menyimpan — ' . $e->getMessage();
 }
 
-header('Location: ' . BASE_URL . '/penerimaan.php');
+header('Location: ' . BASE_URL . '/pages/penerimaan.php');
 exit;
