@@ -50,7 +50,6 @@ CREATE TABLE IF NOT EXISTS peralatan (
     tanggal_kalibrasi       DATE,
     masa_berlaku_kalibrasi  DATE,
     jam_pakai               INT DEFAULT 0,
-    tanggal_servis_terakhir DATE,
     jadwal_maintenance      DATE,
     pic                     VARCHAR(100),
     catatan                 TEXT,
@@ -115,14 +114,12 @@ CREATE TABLE IF NOT EXISTS work_order (
     selesai_at      DATETIME NULL,
     catatan         TEXT,
     dibuat_oleh     INT,
-    disetujui_oleh  INT,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (penerimaan_id)   REFERENCES penerimaan_sampel(id) ON DELETE SET NULL,
     FOREIGN KEY (analis_id)       REFERENCES pengguna(id),
     FOREIGN KEY (peralatan_id)    REFERENCES peralatan(id),
-    FOREIGN KEY (dibuat_oleh)     REFERENCES pengguna(id),
-    FOREIGN KEY (disetujui_oleh)  REFERENCES pengguna(id)
+    FOREIGN KEY (dibuat_oleh)     REFERENCES pengguna(id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- ------------------------------------------------------------
@@ -180,8 +177,6 @@ CREATE TABLE IF NOT EXISTS hasil_uji (
     faktor_pengenceran DECIMAL(10,4) DEFAULT 1.0000,
     nilai_terkoreksi DECIMAL(12,4) DEFAULT NULL,
     satuan           VARCHAR(20),
-    satuan_asli      VARCHAR(20)   DEFAULT NULL,
-    satuan_laporan   VARCHAR(20)   DEFAULT NULL,
     faktor_konversi  DECIMAL(14,8) DEFAULT 1.00000000,
     batas_min        DECIMAL(12,4),
     batas_maks       DECIMAL(12,4),
@@ -202,13 +197,12 @@ CREATE TABLE IF NOT EXISTS hasil_uji (
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS qc_sampel (
     id              INT AUTO_INCREMENT PRIMARY KEY,
-    hasil_uji_id    INT,
     preparasi_id    INT,
     sampel_id       INT NOT NULL,
     tipe_qc         ENUM('blanko','standar','spike','duplikat') NOT NULL,
     parameter       VARCHAR(100),
     nilai_qc        DECIMAL(12,4),
-    nilai_expected  DECIMAL(12,4),
+    nilai_expected  INT,
     satuan          VARCHAR(20),
     persen_recovery DECIMAL(8,4),
     batas_min_pct   DECIMAL(6,2) DEFAULT 85.00,
@@ -219,7 +213,6 @@ CREATE TABLE IF NOT EXISTS qc_sampel (
     catatan_review  TEXT,
     tanggal_uji     DATE,
     created_at      TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (hasil_uji_id)  REFERENCES hasil_uji(id) ON DELETE SET NULL,
     FOREIGN KEY (preparasi_id)  REFERENCES preparasi_sampel(id) ON DELETE SET NULL,
     FOREIGN KEY (sampel_id)     REFERENCES sampel(id),
     FOREIGN KEY (reviewer_id)   REFERENCES pengguna(id)
@@ -352,6 +345,20 @@ CREATE TABLE IF NOT EXISTS client_access (
 -- STORED PROCEDURES & TRIGGERS
 -- ------------------------------------------------------------
 
+DROP PROCEDURE IF EXISTS recalc_invoice;
+DROP TRIGGER IF EXISTS trg_inv_item_insert;
+DROP TRIGGER IF EXISTS trg_inv_item_update;
+DROP TRIGGER IF EXISTS trg_inv_item_delete;
+DROP TRIGGER IF EXISTS trg_hitung_koreksi_insert;
+DROP TRIGGER IF EXISTS trg_hitung_koreksi_update;
+DROP TRIGGER IF EXISTS trg_qc_recovery_insert;
+DROP TRIGGER IF EXISTS trg_qc_recovery_update;
+DROP TRIGGER IF EXISTS trg_sampel_after_insert;
+DROP TRIGGER IF EXISTS trg_sampel_after_update;
+DROP TRIGGER IF EXISTS trg_sampel_after_delete;
+DROP TRIGGER IF EXISTS trg_hasil_uji_after_insert;
+DROP TRIGGER IF EXISTS trg_hasil_uji_after_update;
+
 DELIMITER $$
 
 -- 1. Recalculate Invoice
@@ -390,8 +397,6 @@ CREATE TRIGGER trg_hitung_koreksi_insert
 BEFORE INSERT ON hasil_uji FOR EACH ROW
 BEGIN
     SET NEW.nilai_terkoreksi = NEW.nilai * COALESCE(NEW.faktor_pengenceran, 1.0) * COALESCE(NEW.faktor_konversi, 1.0);
-    IF NEW.satuan_laporan IS NULL THEN SET NEW.satuan_laporan = NEW.satuan; END IF;
-    IF NEW.satuan_asli IS NULL THEN SET NEW.satuan_asli = NEW.satuan; END IF;
 END$$
 
 CREATE TRIGGER trg_hitung_koreksi_update
@@ -493,7 +498,7 @@ DELIMITER ;
 -- ------------------------------------------------------------
 
 -- Users (Password: password)
-INSERT INTO pengguna (nama, username, password, email, role) VALUES
+INSERT IGNORE INTO pengguna (nama, username, password, email, role) VALUES
 ('Administrator Lab', 'admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin@labmineral.com', 'admin'),
 ('Rani Dewi, S.Si', 'rani.d', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'rani@lab.com', 'analis'),
 ('Budi Santoso', 'budi.s', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'budi@lab.com', 'analis'),
@@ -502,7 +507,7 @@ INSERT INTO pengguna (nama, username, password, email, role) VALUES
 ('PT. Freeport Indonesia', 'freeport', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'info@freeport.co.id', 'client');
 
 -- Tarif
-INSERT INTO tarif_pengujian (nama, metode, parameter, harga, satuan) VALUES
+INSERT IGNORE INTO tarif_pengujian (nama, metode, parameter, harga, satuan) VALUES
 ('AAS — Logam tunggal',        'AAS',        NULL,         250000, 'per parameter'),
 ('XRF — Oksida mayor',         'XRF',        NULL,         300000, 'per parameter'),
 ('ICP-OES — Multi elemen',     'ICP-OES',    NULL,         350000, 'per parameter'),
@@ -513,8 +518,8 @@ INSERT INTO tarif_pengujian (nama, metode, parameter, harga, satuan) VALUES
 ('Preparasi Fusion',           NULL,         NULL,         200000, 'per sampel');
 
 -- Examples (Optional basic data)
-INSERT INTO penerimaan_sampel (nomor_penerimaan, klien, tanggal_terima, jumlah_sampel, jenis_material, metode_uji, status, dibuat_oleh) VALUES
+INSERT IGNORE INTO penerimaan_sampel (nomor_penerimaan, klien, tanggal_terima, jumlah_sampel, jenis_material, metode_uji, status, dibuat_oleh) VALUES
 ('REC-2603-001', 'PT. Freeport Indonesia', '2026-03-13', 1, 'Bijih Emas', 'Fire Assay', 'diproses', 1);
 
-INSERT INTO sampel (penerimaan_id, kode_sampel, tanggal_masuk, jenis_material, berat_gram, klien, metode_uji, status, dibuat_oleh) VALUES
+INSERT IGNORE INTO sampel (penerimaan_id, kode_sampel, tanggal_masuk, jenis_material, berat_gram, klien, metode_uji, status, dibuat_oleh) VALUES
 (1, 'S-2603-001', '2026-03-13', 'Bijih Emas', 500.000, 'PT. Freeport Indonesia', 'Fire Assay', 'antrian', 1);

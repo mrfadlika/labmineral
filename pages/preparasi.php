@@ -6,6 +6,7 @@
 // ============================================================
 session_start();
 require_once __DIR__ . '/../config/db.php';
+/** @var PDO $pdo */
 cekLogin();
 
 // Cek akses
@@ -121,7 +122,14 @@ foreach ($prepList as $p) {
     $prepByWo[$key][] = $p;
 }
 
-$metodePrepOpts = ['destruksi_asam','ekstraksi','pengenceran','fusion','lainnya'];
+ensureMetodePreparasiTable($pdo);
+$metodePrepOpts = $pdo->query(
+    "SELECT metode FROM metode_preparasi ORDER BY metode ASC"
+)->fetchAll(PDO::FETCH_COLUMN);
+
+if (!$metodePrepOpts) {
+    $metodePrepOpts = ['destruksi_asam','ekstraksi','pengenceran','fusion','lainnya'];
+}
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -341,7 +349,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <label>Metode Preparasi <span style="color:var(--red)">*</span></label>
                             <select name="metode_preparasi" <?= $isReadOnly ? 'disabled' : '' ?> required>
                                 <?php foreach ($metodePrepOpts as $m): ?>
-                                    <option value="<?= $m ?>"><?= ucfirst(str_replace('_',' ',$m)) ?></option>
+                                    <option value="<?= bersihkan($m) ?>"><?= ucfirst(str_replace('_',' ', bersihkan($m))) ?></option>
                                 <?php endforeach; ?>
                             </select>
                         </div>

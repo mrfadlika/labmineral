@@ -3,7 +3,7 @@
         'name' => 'fadli/labmineral',
         'pretty_version' => 'dev-main',
         'version' => 'dev-main',
-        'reference' => '50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8',
+        'reference' => '050e1ffc6412030ec0d687228e7aa4eb77175411',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -22,7 +22,7 @@
         'fadli/labmineral' => array(
             'pretty_version' => 'dev-main',
             'version' => 'dev-main',
-            'reference' => '50a6e1905fa6bdd226ed3ae1eee9cc6feb2442e8',
+            'reference' => '050e1ffc6412030ec0d687228e7aa4eb77175411',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

@@ -8,7 +8,26 @@ param(
 $ErrorActionPreference = "Stop"
 
 $projectRoot = Split-Path -Parent $PSScriptRoot
-$mysqlExe = (Get-Command mysql -ErrorAction Stop).Source
+$mysqlExe = ""
+try {
+    $mysqlExe = (Get-Command mysql -ErrorAction Stop).Source
+} catch {
+    # Laragon & XAMPP Fallback Detector
+    $laragonPattern = "C:\laragon\bin\mysql\mysql-*\bin\mysql.exe"
+    $laragonPaths = Resolve-Path $laragonPattern -ErrorAction SilentlyContinue
+    if ($laragonPaths) {
+        $mysqlExe = $laragonPaths[0].Path
+    } else {
+        $xamppPath = "C:\xampp\mysql\bin\mysql.exe"
+        if (Test-Path $xamppPath) {
+            $mysqlExe = $xamppPath
+        }
+    }
+}
+
+if (-not $mysqlExe) {
+    throw "mysql.exe tidak ditemukan di PATH, Laragon, maupun XAMPP. Silakan instal MySQL atau tambahkan ke PATH."
+}
 
 function Get-MysqlArgs {
     param(
@@ -41,34 +60,14 @@ $mysqlArgs = Get-MysqlArgs -User $MysqlUser -Password $MysqlPassword
 $dbExistsRaw = & $mysqlExe @mysqlArgs -N -e "SHOW DATABASES LIKE '$Database';"
 $dbExists = if ($null -eq $dbExistsRaw) { "" } else { "$dbExistsRaw".Trim() }
 
-$baseMigrations = @(
-    (Join-Path $projectRoot "scripts/sql/create_database_labmineral.sql"),
-    (Join-Path $projectRoot "labmineral.sql"),
-    (Join-Path $projectRoot "batch_sql.sql"),
-    (Join-Path $projectRoot "fix.sql"),
-    (Join-Path $projectRoot "modul_baru.sql"),
-    (Join-Path $projectRoot "invoice.sql")
-)
+$migrationFile = Join-Path $projectRoot "scripts/sql/database_latest.sql"
 
-$postMigrations = @(
-    (Join-Path $projectRoot "fix_work_order_batch.sql"),
-    (Join-Path $projectRoot "scripts/sql/patch_work_order_nullable.sql"),
-    (Join-Path $projectRoot "scripts/sql/patch_submission_tables.sql"),
-    (Join-Path $projectRoot "scripts/sql/patch_supervisor_role.sql"),
-    (Join-Path $projectRoot "update_user_roles.sql")
-)
-
-if (-not $dbExists -or $IncludeBase) {
-    Write-Host "Database labmineral belum ada. Menjalankan import schema dasar + migrasi lanjutan."
-    foreach ($file in $baseMigrations + $postMigrations) {
-        Invoke-SqlFile -FilePath $file -MysqlArgs $mysqlArgs
-    }
-} else {
-    Write-Host "Database labmineral sudah ada. Runner ini aman untuk patch lanjutan saja."
-    foreach ($file in $postMigrations) {
-        Invoke-SqlFile -FilePath $file -MysqlArgs $mysqlArgs
-    }
+if (-not (Test-Path $migrationFile)) {
+    throw "File skrip konsolidasi database_latest.sql tidak ditemukan!"
 }
+
+Write-Host "Menjalankan migrasi database konsolidasi (database_latest.sql)..."
+Invoke-SqlFile -FilePath $migrationFile -MysqlArgs $mysqlArgs
 
 Write-Host "`n==> Verifikasi akhir"
 & $mysqlExe @mysqlArgs -D $Database -e @"

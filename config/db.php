@@ -28,6 +28,7 @@ if ($projectRoot && $documentRoot) {
 define('BASE_URL', $baseUrl);
 
 // ── Koneksi PDO ──────────────────────────────────────────────
+/** @var PDO $pdo */
 $pdo = null;
 try {
     $dsn = "mysql:host=".DB_HOST.";dbname=".DB_NAME.";charset=utf8mb4";
@@ -319,6 +320,14 @@ function canAccessPengguna() {
     return isAdmin();
 }
 
+function canAccessMetodePreparasi() {
+    return isAdmin();
+}
+
+function canEditMetodePreparasi() {
+    return isAdmin();
+}
+
 // ============================================================
 // END OF ROLE HELPER FUNCTIONS
 // ============================================================
@@ -424,6 +433,21 @@ function tableExists($pdo, $table) {
         return false;
     }
     return $result !== false;
+}
+
+function ensureMetodePreparasiTable($pdo) {
+    if (tableExists($pdo, 'metode_preparasi')) {
+        return;
+    }
+
+    $pdo->exec(
+        "CREATE TABLE IF NOT EXISTS metode_preparasi (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            metode VARCHAR(255) NOT NULL UNIQUE,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+    );
 }
 
 function clientAccessTableReady($pdo) {

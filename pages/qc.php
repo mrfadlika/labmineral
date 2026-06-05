@@ -33,8 +33,25 @@ $qcList = $pdo->query("
     LEFT JOIN preparasi_sampel pr ON q.preparasi_id = pr.id
     LEFT JOIN work_order w ON pr.work_order_id = w.id
     LEFT JOIN pengguna r ON q.reviewer_id = r.id
+    WHERE NOT (q.tipe_qc = 'standar' AND q.nilai_qc IS NULL AND q.preparasi_id IS NULL)
     ORDER BY q.created_at DESC
 ")->fetchAll();
+
+$qcManajemenRows = [];
+$qcManajemenData = $pdo->query("
+    SELECT q.sampel_id, q.parameter, q.nilai_expected
+    FROM qc_sampel q
+    WHERE q.tipe_qc = 'standar'
+      AND q.nilai_qc IS NULL
+      AND q.preparasi_id IS NULL
+    ORDER BY q.created_at DESC
+")->fetchAll();
+foreach ($qcManajemenData as $m) {
+    $qcManajemenRows[$m['sampel_id']] = [
+        'parameter'      => $m['parameter'],
+        'nilai_expected' => $m['nilai_expected'],
+    ];
+}
 
 // ── Filter per WO ─────────────────────────────────────────────
 $woFilter  = null;
@@ -65,6 +82,24 @@ $sampelDenganPrep = $pdo->query("
     ORDER BY pr.created_at DESC
 ")->fetchAll();
 
+$manajemenSamples = $pdo->query("
+    SELECT NULL AS prep_id, q.sampel_id, NULL AS faktor_pengenceran,
+           NULL AS blanko_disiapkan, NULL AS standar_disiapkan,
+           NULL AS spike_disiapkan, NULL AS duplikat_disiapkan,
+           s.kode_sampel, s.jenis_material, NULL AS nomor_wo
+    FROM qc_sampel q
+    JOIN sampel s ON q.sampel_id = s.id
+    WHERE q.tipe_qc = 'standar'
+      AND q.nilai_qc IS NULL
+      AND q.preparasi_id IS NULL
+      AND NOT EXISTS (
+          SELECT 1 FROM preparasi_sampel pr WHERE pr.sampel_id = q.sampel_id
+      )
+    ORDER BY q.created_at DESC
+")->fetchAll();
+
+$sampelDenganPrep = array_merge($sampelDenganPrep, $manajemenSamples);
+
 $analisList = $pdo->query(
     "SELECT id, nama FROM pengguna WHERE role IN('admin','analis') AND status='aktif'"
 )->fetchAll();
@@ -91,6 +126,9 @@ require_once __DIR__ . '/../includes/header.php';
 .flag-warn{background:#3d2e00;color:#f39c12;border-radius:10px;font-size:.68rem;padding:2px 9px;font-weight:600;}
 .rec-bar-wrap{width:100px;background:#1a3525;border-radius:4px;height:8px;overflow:hidden;display:inline-block;vertical-align:middle;}
 .rec-bar{height:100%;border-radius:4px;}
+.card form{display:grid;gap:14px;}
+.card form .form-group{margin:0;}
+.card form .form-group input{width:100%;}
 .tipe-blanko  {background:#0d2a3d;color:#3498db;border-radius:8px;font-size:.65rem;padding:1px 7px;}
 .tipe-standar {background:#1a2e0a;color:#8acd40;border-radius:8px;font-size:.65rem;padding:1px 7px;}
 .tipe-spike   {background:#2e1a00;color:#e89c30;border-radius:8px;font-size:.65rem;padding:1px 7px;}
@@ -128,6 +166,7 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="tabs">
     <button class="tab-btn <?= $tab==='dashboard'?'active':'' ?>" onclick="switchTab('dashboard',this)">&#128202; QC Dashboard</button>
+    <button class="tab-btn <?= $tab==='manajemen'?'active':'' ?>" onclick="switchTab('manajemen',this)">&#128221; Manajemen Sampel QC</button>
     <button class="tab-btn <?= $tab==='input'?'active':'' ?>"     onclick="switchTab('input',this)" <?= $isReadOnly ? 'disabled' : '' ?>>&#10133; Input Data QC</button>
     <button class="tab-btn <?= $tab==='review'?'active':'' ?>"    onclick="switchTab('review',this)">
         &#128269; Review Supervisor
@@ -221,6 +260,33 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<!-- ── TAB 2: MANAJEMEN SAMPEL QC ──────────────────────── -->
+<div id="tab-manajemen" class="tab-pane <?= $tab==='manajemen'?'active':'' ?>">
+    <div class="card">
+        <div class="card-title">&#128221; Manajemen Sampel QC</div>
+        <form method="POST" action="<?= BASE_URL ?>/actions/simpan_qc.php" style="display:grid;gap:14px">
+            <input type="hidden" name="action" value="manage" />
+            <div class="form-group">
+                <label>ID / Kode Sampel</label>
+                <input name="manajemen_id_sampel" placeholder="Masukkan ID atau Kode Sampel" <?= $isReadOnly ? 'readonly disabled' : '' ?> />
+            </div>
+            <div class="form-group">
+                <label>Nilai Sertifikat</label>
+                <input name="manajemen_nilai_sertifikat" placeholder="Masukkan nilai sertifikat" <?= $isReadOnly ? 'readonly disabled' : '' ?> />
+            </div>
+            <div class="form-group">
+                <label>Parameter</label>
+                <input name="manajemen_parameter" placeholder="Masukkan parameter" <?= $isReadOnly ? 'readonly disabled' : '' ?> />
+            </div>
+            <?php if (!$isReadOnly): ?>
+                <button type="submit" class="btn btn-gold" style="justify-self:start">&#128190; Simpan Sampel QC</button>
+            <?php else: ?>
+                <div class="readonly-badge" style="display:inline-flex;margin-top:8px">🔒 Mode Read Only - Tidak dapat menyimpan</div>
+            <?php endif; ?>
+        </form>
+    </div>
+</div>
+
 <!-- ── TAB 2: INPUT QC ──────────────────────────────────── -->
 <div id="tab-input" class="tab-pane <?= $tab==='input'?'active':'' ?>">
     <div class="card">
@@ -233,15 +299,17 @@ require_once __DIR__ . '/../includes/header.php';
                     <select name="preparasi_id" <?= $isReadOnly ? 'disabled' : '' ?> required>
                         <option value="">— Pilih Sampel —</option>
                         <?php foreach ($sampelDenganPrep as $p): ?>
-                            <option value="<?= $p['prep_id'] ?>"
+                            <option value="<?= $p['prep_id'] !== null ? $p['prep_id'] : 'man_'.intval($p['sampel_id']) ?>"
                                     data-sampel="<?= $p['sampel_id'] ?>"
                                     data-faktor="<?= $p['faktor_pengenceran'] ?>"
                                     data-blanko="<?= $p['blanko_disiapkan'] ?>"
                                     data-standar="<?= $p['standar_disiapkan'] ?>"
                                     data-spike="<?= $p['spike_disiapkan'] ?>"
                                     data-duplikat="<?= $p['duplikat_disiapkan'] ?>">
-                                <?= bersihkan($p['kode_sampel']) ?> — <?= bersihkan($p['jenis_material']) ?>
+                                <?= bersihkan($p['kode_sampel']) ?>
+                                <?= $p['jenis_material'] && $p['jenis_material'] !== 'unknown' ? ' — '.bersihkan($p['jenis_material']) : '' ?>
                                 <?= $p['nomor_wo'] ? '['.bersihkan($p['nomor_wo']).']' : '' ?>
+                                <?= $p['prep_id'] === null ? ' (Manajemen QC)' : '' ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
@@ -282,8 +350,8 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
                 <div class="form-group">
                     <label>Nilai Expected / Referensi</label>
-                    <input type="number" step="0.0001" name="nilai_expected"
-                           id="nilaiExpInput" placeholder="0.0000" <?= $isReadOnly ? 'readonly disabled' : '' ?> oninput="hitungRecovery()"/>
+                    <input type="number" step="1" min="0" name="nilai_expected"
+                           id="nilaiExpInput" placeholder="0" <?= $isReadOnly ? 'readonly disabled' : '' ?> oninput="hitungRecovery()"/>
                 </div>
             </div>
 
@@ -410,6 +478,9 @@ function switchTab(name, el) {
     document.getElementById('tab-' + name).classList.add('active');
     if (el) el.classList.add('active');
     history.replaceState(null, '', '?tab=' + name);
+    if (name === 'input') {
+        syncInputFromSelectedSample();
+    }
 }
 
 const tipeHelp = {
@@ -423,6 +494,46 @@ function updateTipeHelp() {
     const t = document.getElementById('tipeQc').value;
     document.getElementById('tipeHelp').innerHTML = tipeHelp[t] || '';
 }
+
+const qcManajemenData = <?= json_encode($qcManajemenRows, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>;
+
+function syncInputFromSelectedSample() {
+    const select = document.querySelector('select[name="preparasi_id"]');
+    const parameterField = document.querySelector('input[name="parameter"]');
+    const nilaiExpectedField = document.querySelector('input[name="nilai_expected"]');
+    if (!select || !parameterField || !nilaiExpectedField) return;
+
+    const selected = select.selectedOptions[0];
+    if (!selected) return;
+    const sampleId = (selected.dataset.sampel || '').trim();
+    if (!sampleId) return;
+
+    const stored = qcManajemenData[sampleId];
+    if (!stored) {
+        parameterField.value = '';
+        nilaiExpectedField.value = '';
+        return;
+    }
+
+    if (stored.parameter) {
+        parameterField.value = stored.parameter;
+    }
+    if (stored.nilai_expected) {
+        nilaiExpectedField.value = stored.nilai_expected;
+        hitungRecovery();
+    }
+}
+
+function setupQcManajemenSync() {
+    const select = document.querySelector('select[name="preparasi_id"]');
+    if (select) {
+        select.addEventListener('change', syncInputFromSelectedSample);
+    }
+
+    syncInputFromSelectedSample();
+}
+
+window.addEventListener('DOMContentLoaded', setupQcManajemenSync);
 
 function hitungRecovery() {
     const nilai    = parseFloat(document.getElementById('nilaiQcInput').value);
