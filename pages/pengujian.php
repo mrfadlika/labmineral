@@ -15,7 +15,7 @@ $tab = $_GET['tab'] ?? 'hasil';
 $preSampelId = (int)($_GET['sampel_id'] ?? 0);
 
 // ── Data untuk form ──────────────────────────────────────────
-// Sampel aktif — exclude yang sudah ada hasil_uji
+// Sampel aktif — exclude yang sudah ada hasil_uji, dan WAJIB sudah lulus QC (sesuai flowchart)
 $sampelAktif = $pdo->query("
     SELECT s.id, s.kode_sampel, s.jenis_material, s.klien,
            rec.nomor_penerimaan,
@@ -28,6 +28,14 @@ $sampelAktif = $pdo->query("
     LEFT JOIN penerimaan_sampel rec ON s.penerimaan_id = rec.id
     WHERE s.status IN ('antrian','diuji')
       AND s.id NOT IN (SELECT DISTINCT sampel_id FROM hasil_uji)
+      AND EXISTS (
+          SELECT 1 FROM qc_sampel q
+          LEFT JOIN work_order_sampel wos_qc ON q.sampel_id = wos_qc.sampel_id
+          LEFT JOIN work_order_sampel wos_s ON wos_qc.wo_id = wos_s.wo_id
+          WHERE (q.sampel_id = s.id OR wos_s.sampel_id = s.id)
+            AND q.status_qc = 'disetujui'
+            AND q.flag = 'pass'
+      )
     ORDER BY rec.nomor_penerimaan, s.kode_sampel
 ")->fetchAll();
 
@@ -42,6 +50,7 @@ $alatList   = $pdo->query("SELECT id, kode_alat, nama FROM peralatan WHERE statu
 $analisList = $pdo->query("SELECT id, nama FROM pengguna WHERE role IN('admin','analis') AND status='aktif'")->fetchAll();
 
 // ── Daftar WO aktif — untuk selector batch di tab input & batch ──
+// Hanya WO yang memiliki QC passed (sesuai flowchart)
 $woAktifList = $pdo->query("
     SELECT w.id, w.nomor_wo, w.metode, w.parameter, w.prioritas,
            rec.nomor_penerimaan, rec.klien,
@@ -50,6 +59,13 @@ $woAktifList = $pdo->query("
     LEFT JOIN penerimaan_sampel rec ON w.penerimaan_id = rec.id
     LEFT JOIN work_order_sampel wos ON wos.wo_id = w.id
     WHERE w.status = 'aktif'
+      AND EXISTS (
+          SELECT 1 FROM qc_sampel q
+          JOIN work_order_sampel wos_qc ON q.sampel_id = wos_qc.sampel_id
+          WHERE wos_qc.wo_id = w.id
+            AND q.status_qc = 'disetujui'
+            AND q.flag = 'pass'
+      )
     GROUP BY w.id
     ORDER BY FIELD(w.prioritas,'urgent','tinggi','normal'), w.jadwal_mulai ASC
 ")->fetchAll();

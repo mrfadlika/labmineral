@@ -89,6 +89,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <button type="submit" class="btn-login">🔐 Masuk</button>
   </form>
+  
+  <div class="hint" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border);">
+    <p style="margin-bottom: 8px;">Klien baru atau ingin mengajukan pengujian?</p>
+    <a href="<?= BASE_URL ?>/pages/ssf.php" style="display:inline-block; padding:8px 16px; background:var(--bg3); color:var(--gold); border:1px solid var(--gold2); border-radius:7px; text-decoration:none; font-size:.85rem; font-weight:600; transition:0.2s;">
+      📝 Isi Sample Submission Form (SSF)
+    </a>
+  </div>
 </div>
 </body>
 </html>
