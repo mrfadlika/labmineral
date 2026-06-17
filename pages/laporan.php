@@ -8,7 +8,7 @@ cekLogin();
 
 // Cek akses laporan
 if (!canAccessLaporan()) {
-    $_SESSION['msg'] = 'ERROR: Hanya Administrator dan Supervisor yang dapat mengakses Laporan.';
+    $_SESSION['msg'] = 'ERROR: Anda tidak memiliki akses ke Laporan.';
     header('Location: ' . BASE_URL . '/pages/dashboard.php');
     exit;
 }
@@ -25,6 +25,21 @@ $pct      = $totalUji > 0 ? round($lulus / $totalUji * 100) : 0;
 $klienList = $pdo->query(
     "SELECT DISTINCT klien FROM sampel WHERE klien IS NOT NULL AND klien != '' ORDER BY klien"
 )->fetchAll(PDO::FETCH_COLUMN);
+
+// Hasil uji terbaru (50 data)
+$hasilTerbaru = $pdo->query("
+    SELECT h.kode_uji, h.parameter, h.nilai, h.satuan, h.kesimpulan, h.tanggal_uji,
+           s.kode_sampel, s.jenis_material, s.klien,
+           w.nomor_wo,
+           p.nama AS nama_analis
+    FROM hasil_uji h
+    JOIN sampel s ON h.sampel_id = s.id
+    LEFT JOIN preparasi_sampel pr ON h.preparasi_id = pr.id
+    LEFT JOIN work_order w ON pr.work_order_id = w.id
+    LEFT JOIN pengguna p ON h.analis_id = p.id
+    ORDER BY h.created_at DESC
+    LIMIT 50
+")->fetchAll();
 
 require_once __DIR__ . '/../includes/header.php';
 ?>
@@ -101,6 +116,61 @@ require_once __DIR__ . '/../includes/header.php';
             <div>&#10007; Tidak Lulus: <strong style="color:var(--red)"><?= $totalUji - $lulus ?></strong></div>
         </div>
     </div>
+</div>
+
+<!-- TABEL HASIL PENGUJIAN TERBARU -->
+<div class="card" style="margin-top:20px">
+    <div class="card-title">&#128202; Hasil Pengujian Terbaru <span style="font-size:.75rem;color:var(--text3);font-weight:400">(50 data terakhir)</span></div>
+    <?php if ($hasilTerbaru): ?>
+    <div style="overflow-x:auto">
+    <table class="data-table" style="font-size:.8rem">
+        <thead>
+            <tr>
+                <th>Kode Uji</th>
+                <th>Sampel</th>
+                <th>Klien</th>
+                <th>Nomor WO</th>
+                <th>Parameter</th>
+                <th>Nilai</th>
+                <th>Satuan</th>
+                <th>Kesimpulan</th>
+                <th>Analis</th>
+                <th>Tgl Uji</th>
+            </tr>
+        </thead>
+        <tbody>
+        <?php foreach ($hasilTerbaru as $h): ?>
+        <tr>
+            <td style="font-family:monospace;color:var(--gold)"><?= bersihkan($h['kode_uji']) ?></td>
+            <td>
+                <strong><?= bersihkan($h['kode_sampel']) ?></strong>
+                <?php if ($h['jenis_material']): ?>
+                    <br><small style="color:var(--text3)"><?= bersihkan($h['jenis_material']) ?></small>
+                <?php endif; ?>
+            </td>
+            <td style="font-size:.75rem"><?= bersihkan($h['klien'] ?? '—') ?></td>
+            <td style="font-size:.75rem;color:var(--text3)"><?= bersihkan($h['nomor_wo'] ?? '—') ?></td>
+            <td><strong><?= bersihkan($h['parameter']) ?></strong></td>
+            <td style="text-align:right;font-weight:700;color:var(--green)"><?= number_format((float)$h['nilai'], 4) ?></td>
+            <td style="color:var(--text3)"><?= bersihkan($h['satuan'] ?? '') ?></td>
+            <td>
+                <?php
+                $kes = $h['kesimpulan'];
+                $kesCol = $kes === 'lulus' ? 'var(--green)' : ($kes === 'tidak_lulus' ? 'var(--red)' : 'var(--yellow)');
+                $kesLabel = $kes === 'lulus' ? '✓ Lulus' : ($kes === 'tidak_lulus' ? '✗ Tidak Lulus' : '⏳ Pending');
+                ?>
+                <span style="color:<?= $kesCol ?>;font-weight:700;font-size:.75rem"><?= $kesLabel ?></span>
+            </td>
+            <td style="font-size:.75rem"><?= bersihkan($h['nama_analis'] ?? '—') ?></td>
+            <td style="font-size:.75rem;color:var(--text3)"><?= $h['tanggal_uji'] ? date('d/m/Y', strtotime($h['tanggal_uji'])) : '—' ?></td>
+        </tr>
+        <?php endforeach; ?>
+        </tbody>
+    </table>
+    </div>
+    <?php else: ?>
+        <div style="text-align:center;padding:24px;color:var(--text3)">Belum ada data hasil pengujian.</div>
+    <?php endif; ?>
 </div>
 
 <?php require_once __DIR__ . '/../includes/footer.php'; ?>

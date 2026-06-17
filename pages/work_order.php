@@ -86,7 +86,7 @@ $alatList = $pdo->query(
 
 // ── Daftar WO dengan filter ───────────────────────────────────
 // UPDATE: tidak JOIN sampel langsung, ambil info via pivot + penerimaan
-$fStatus = $_GET['fstatus'] ?? '';
+$fStatus = $_GET['fstatus'] ?? 'aktif_draft';
 $search  = trim($_GET['q'] ?? '');
 
 $sqlWo = "
@@ -105,7 +105,9 @@ $sqlWo = "
     LEFT JOIN peralatan p ON w.peralatan_id = p.id
     WHERE 1=1";
 $prmWo = [];
-if ($fStatus) {
+if ($fStatus === 'aktif_draft') {
+    $sqlWo .= " AND w.status IN ('aktif','draft')";
+} elseif ($fStatus && $fStatus !== 'semua') {
     $sqlWo .= " AND w.status=?";
     $prmWo[] = $fStatus;
 }
@@ -246,7 +248,8 @@ require_once __DIR__ . '/../includes/header.php';
                placeholder="&#128269; Cari nomor WO / nomor penerimaan / klien..."
                style="flex:1;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 12px;border-radius:6px;font-size:.8rem;outline:none"/>
         <select name="fstatus" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px;font-size:.8rem;outline:none">
-            <option value="">Semua Status</option>
+            <option value="aktif_draft" <?= $fStatus==='aktif_draft' ? 'selected' : '' ?>>Aktif & Draft</option>
+            <option value="semua" <?= $fStatus==='semua' ? 'selected' : '' ?>>Semua Status</option>
             <?php foreach (['draft','aktif','selesai','dibatalkan'] as $st): ?>
                 <option value="<?= $st ?>" <?= $fStatus===$st ? 'selected' : '' ?>><?= ucfirst($st) ?></option>
             <?php endforeach; ?>
@@ -303,8 +306,8 @@ require_once __DIR__ . '/../includes/header.php';
 
         <div id="wo-body-<?= $w['id'] ?>" class="wo-body">
 
-            <!-- Chips daftar sampel dalam WO ini -->
-            <?php if ($sampelDalamWo): ?>
+            <!-- Chips daftar sampel dalam WO ini (Sembunyikan jika sudah selesai) -->
+            <?php if ($sampelDalamWo && $w['status'] !== 'selesai'): ?>
             <div style="margin-bottom:14px">
                 <div style="font-size:.7rem;color:var(--text3);margin-bottom:6px">&#128300; Sampel dalam Work Order ini</div>
                 <div class="sampel-chips">

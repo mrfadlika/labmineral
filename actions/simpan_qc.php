@@ -35,12 +35,14 @@ if ($action === 'input' || !$action) {
     $bMinPct   = (float)($_POST['batas_min_pct']  ?? 85);
     $bMaksPct  = (float)($_POST['batas_maks_pct'] ?? 115);
 
-    // Recovery & flag dihitung oleh trigger, tapi hitung di PHP untuk verifikasi
+    // Recovery dihitung oleh trigger
+    // Hitung flag di PHP untuk verifikasi / session message
     $recPct = ($nilaiExp && $nilaiExp > 0) ? ($nilaiQc / $nilaiExp) * 100 : null;
     $flag   = 'pass';
-    if ($recPct !== null) {
-        if ($recPct < $bMinPct || $recPct > $bMaksPct) $flag = 'fail';
-        elseif ($recPct < $bMinPct + 5 || $recPct > $bMaksPct - 5) $flag = 'warning';
+    if ($nilaiExp !== null) {
+        $diff = abs($nilaiQc - $nilaiExp);
+        if ($diff <= 0.05) $flag = 'pass';
+        else $flag = 'fail';
     }
 
     $pdo->prepare(

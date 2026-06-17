@@ -168,10 +168,12 @@ require_once __DIR__ . '/../includes/header.php';
     <button class="tab-btn <?= $tab==='dashboard'?'active':'' ?>" onclick="switchTab('dashboard',this)">&#128202; QC Dashboard</button>
     <button class="tab-btn <?= $tab==='manajemen'?'active':'' ?>" onclick="switchTab('manajemen',this)">&#128221; Manajemen Sampel QC</button>
     <button class="tab-btn <?= $tab==='input'?'active':'' ?>"     onclick="switchTab('input',this)" <?= $isReadOnly ? 'disabled' : '' ?>>&#10133; Input Data QC</button>
+    <?php if (isSupervisor()): ?>
     <button class="tab-btn <?= $tab==='review'?'active':'' ?>"    onclick="switchTab('review',this)">
         &#128269; Review Supervisor
         <?php if ($qcPending > 0): ?><span class="badge-alert" style="margin-left:4px"><?= $qcPending ?></span><?php endif; ?>
     </button>
+    <?php endif; ?>
 </div>
 
 <!-- ── TAB 1: DASHBOARD QC ──────────────────────────────── -->
@@ -296,23 +298,40 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="form-row">
                 <div class="form-group">
                     <label>Sampel / Preparasi <span style="color:var(--red)">*</span></label>
-                    <select name="preparasi_id" <?= $isReadOnly ? 'disabled' : '' ?> required>
-                        <option value="">— Pilih Sampel —</option>
-                        <?php foreach ($sampelDenganPrep as $p): ?>
-                            <option value="<?= $p['prep_id'] !== null ? $p['prep_id'] : 'man_'.intval($p['sampel_id']) ?>"
-                                    data-sampel="<?= $p['sampel_id'] ?>"
-                                    data-faktor="<?= $p['faktor_pengenceran'] ?>"
-                                    data-blanko="<?= $p['blanko_disiapkan'] ?>"
-                                    data-standar="<?= $p['standar_disiapkan'] ?>"
-                                    data-spike="<?= $p['spike_disiapkan'] ?>"
-                                    data-duplikat="<?= $p['duplikat_disiapkan'] ?>">
-                                <?= bersihkan($p['kode_sampel']) ?>
-                                <?= $p['jenis_material'] && $p['jenis_material'] !== 'unknown' ? ' — '.bersihkan($p['jenis_material']) : '' ?>
-                                <?= $p['nomor_wo'] ? '['.bersihkan($p['nomor_wo']).']' : '' ?>
-                                <?= $p['prep_id'] === null ? ' (Manajemen QC)' : '' ?>
-                            </option>
-                        <?php endforeach; ?>
-                    </select>
+                    <!-- Searchable sampel wrapper -->
+                    <div style="position:relative" id="sampelSearchWrapper">
+                        <input type="text" id="sampelSearchInput"
+                               placeholder="&#128269; Cari kode sampel / jenis material / nomor WO..."
+                               style="width:100%;box-sizing:border-box;background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:7px 10px;border-radius:6px 6px 0 0;font-size:.82rem;outline:none"
+                               <?= $isReadOnly ? 'readonly disabled' : '' ?>
+                               oninput="filterSampelOptions()"
+                               autocomplete="off"/>
+                        <select name="preparasi_id" id="sampelSelect"
+                                size="1"
+                                style="width:100%;box-sizing:border-box;border-radius:0 0 6px 6px;border-top:none"
+                                <?= $isReadOnly ? 'disabled' : '' ?> required
+                                onchange="syncInputFromSelectedSample()">
+                            <option value="" data-sampel="" data-label="">— Pilih Sampel —</option>
+                            <?php foreach ($sampelDenganPrep as $p): ?>
+                                <?php
+                                $label = bersihkan($p['kode_sampel'])
+                                    . ($p['jenis_material'] && $p['jenis_material'] !== 'unknown' ? ' — '.bersihkan($p['jenis_material']) : '')
+                                    . ($p['nomor_wo'] ? ' ['.bersihkan($p['nomor_wo']).']' : '')
+                                    . ($p['prep_id'] === null ? ' ✦ Manajemen QC' : '');
+                                ?>
+                                <option value="<?= $p['prep_id'] !== null ? $p['prep_id'] : 'man_'.intval($p['sampel_id']) ?>"
+                                        data-sampel="<?= $p['sampel_id'] ?>"
+                                        data-faktor="<?= $p['faktor_pengenceran'] ?>"
+                                        data-blanko="<?= $p['blanko_disiapkan'] ?>"
+                                        data-standar="<?= $p['standar_disiapkan'] ?>"
+                                        data-spike="<?= $p['spike_disiapkan'] ?>"
+                                        data-duplikat="<?= $p['duplikat_disiapkan'] ?>"
+                                        data-label="<?= htmlspecialchars($label, ENT_QUOTES) ?>">
+                                    <?= $label ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Tipe QC <span style="color:var(--red)">*</span></label>
@@ -349,9 +368,14 @@ require_once __DIR__ . '/../includes/header.php';
                            id="nilaiQcInput" placeholder="0.0000" <?= $isReadOnly ? 'readonly disabled' : '' ?> required oninput="hitungRecovery()"/>
                 </div>
                 <div class="form-group">
-                    <label>Nilai Expected / Referensi</label>
-                    <input type="number" step="1" min="0" name="nilai_expected"
-                           id="nilaiExpInput" placeholder="0" <?= $isReadOnly ? 'readonly disabled' : '' ?> oninput="hitungRecovery()"/>
+                    <label>Nilai Expected / Referensi
+                        <span id="expSourceBadge" style="display:none;font-size:.68rem;background:var(--green3);color:#000;padding:1px 6px;border-radius:20px;margin-left:4px">&#10003; dari Manajemen QC</span>
+                    </label>
+                    <input type="number" step="0.0001" min="0" name="nilai_expected"
+                           id="nilaiExpInput" placeholder="Otomatis dari Manajemen QC"
+                           readonly
+                           style="background:var(--bg2);color:var(--text3);cursor:not-allowed"/>
+                    <small id="expHint" style="font-size:.7rem;color:var(--text3);margin-top:3px;display:block">&#128274; Nilai Expected hanya bisa diisi lewat tab <strong>Manajemen Sampel QC</strong>.</small>
                 </div>
             </div>
 
@@ -366,7 +390,7 @@ require_once __DIR__ . '/../includes/header.php';
                 </div>
             </div>
 
-            <div class="form-row">
+            <div class="form-row" style="display:none;">
                 <div class="form-group">
                     <label>Batas Min Recovery (%)</label>
                     <input type="number" step="0.01" name="batas_min_pct" id="bMinPct" value="85" placeholder="85" <?= $isReadOnly ? 'readonly disabled' : '' ?>/>
@@ -401,6 +425,13 @@ require_once __DIR__ . '/../includes/header.php';
 
 <!-- ── TAB 3: REVIEW SUPERVISOR ─────────────────────────── -->
 <div id="tab-review" class="tab-pane <?= $tab==='review'?'active':'' ?>">
+<?php if (!isSupervisor()): ?>
+    <div class="card" style="text-align:center;padding:40px;color:var(--text3)">
+        <div style="font-size:2.5rem;margin-bottom:12px">&#128274;</div>
+        <div style="font-size:1rem;font-weight:600;color:var(--red)">Akses Ditolak</div>
+        <div style="font-size:.85rem;margin-top:6px">Tab ini hanya dapat diakses oleh <strong>Supervisor</strong>.</div>
+    </div>
+<?php else: ?>
     <?php
     $pending = array_filter($qcList, fn($q) => $q['status_qc'] === 'pending');
     $reviewed = array_filter($qcList, fn($q) => $q['status_qc'] !== 'pending');
@@ -469,6 +500,7 @@ require_once __DIR__ . '/../includes/header.php';
         </table>
     </div>
     <?php endif; ?>
+<?php endif; ?>
 </div>
 
 <script>
@@ -497,39 +529,60 @@ function updateTipeHelp() {
 
 const qcManajemenData = <?= json_encode($qcManajemenRows, JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT) ?>;
 
+function filterSampelOptions() {
+    const q = document.getElementById('sampelSearchInput').value.toLowerCase();
+    const select = document.getElementById('sampelSelect');
+    const options = select.querySelectorAll('option');
+    options.forEach(opt => {
+        if (!opt.value) return; // keep placeholder
+        const label = (opt.dataset.label || opt.textContent).toLowerCase();
+        opt.hidden = q.length > 0 && !label.includes(q);
+    });
+    // if current selection becomes hidden, reset
+    const chosen = select.selectedOptions[0];
+    if (chosen && chosen.hidden) {
+        select.value = '';
+        syncInputFromSelectedSample();
+    }
+}
+
 function syncInputFromSelectedSample() {
-    const select = document.querySelector('select[name="preparasi_id"]');
+    const select = document.getElementById('sampelSelect');
     const parameterField = document.querySelector('input[name="parameter"]');
-    const nilaiExpectedField = document.querySelector('input[name="nilai_expected"]');
+    const nilaiExpectedField = document.getElementById('nilaiExpInput');
+    const badge = document.getElementById('expSourceBadge');
+    const hint  = document.getElementById('expHint');
     if (!select || !parameterField || !nilaiExpectedField) return;
 
     const selected = select.selectedOptions[0];
-    if (!selected) return;
+    if (!selected || !selected.value) {
+        parameterField.value = '';
+        nilaiExpectedField.value = '';
+        badge.style.display = 'none';
+        return;
+    }
     const sampleId = (selected.dataset.sampel || '').trim();
-    if (!sampleId) return;
 
     const stored = qcManajemenData[sampleId];
     if (!stored) {
-        parameterField.value = '';
+        // Sampel reguler — kosongkan expected
         nilaiExpectedField.value = '';
+        badge.style.display = 'none';
+        hint.style.display = 'block';
+        hitungRecovery();
         return;
     }
 
-    if (stored.parameter) {
-        parameterField.value = stored.parameter;
-    }
+    if (stored.parameter) parameterField.value = stored.parameter;
     if (stored.nilai_expected) {
         nilaiExpectedField.value = stored.nilai_expected;
+        badge.style.display = 'inline';
+        hint.style.display  = 'none';
         hitungRecovery();
     }
 }
 
 function setupQcManajemenSync() {
-    const select = document.querySelector('select[name="preparasi_id"]');
-    if (select) {
-        select.addEventListener('change', syncInputFromSelectedSample);
-    }
-
     syncInputFromSelectedSample();
 }
 
@@ -538,20 +591,22 @@ window.addEventListener('DOMContentLoaded', setupQcManajemenSync);
 function hitungRecovery() {
     const nilai    = parseFloat(document.getElementById('nilaiQcInput').value);
     const expected = parseFloat(document.getElementById('nilaiExpInput').value);
-    const bMin     = parseFloat(document.getElementById('bMinPct').value) || 85;
-    const bMaks    = parseFloat(document.getElementById('bMaksPct').value) || 115;
     const prev     = document.getElementById('recoveryPreview');
 
     if (!isNaN(nilai) && !isNaN(expected) && expected > 0) {
+        const diff = Math.abs(nilai - expected);
         const rec = (nilai / expected) * 100;
         prev.style.display = 'block';
-        document.getElementById('recVal').textContent = rec.toFixed(2) + '%';
-        document.getElementById('recBarFill').style.width = Math.min(100, rec) + '%';
+        document.getElementById('recVal').textContent = 'Selisih: ' + diff.toFixed(4) + ' (' + rec.toFixed(2) + '%)';
 
         let flag = 'pass', col = 'var(--green3)';
-        if (rec < bMin || rec > bMaks) { flag = 'fail'; col = 'var(--red)'; }
-        else if (rec < bMin+5 || rec > bMaks-5) { flag = 'warning'; col = 'var(--yellow)'; }
+        if (diff <= 0.05) { 
+            flag = 'pass'; col = 'var(--green3)'; 
+        } else { 
+            flag = 'fail'; col = 'var(--red)'; 
+        }
 
+        document.getElementById('recBarFill').style.width = diff <= 0.05 ? '100%' : '20%';
         document.getElementById('recBarFill').style.background = col;
         const flagEl = document.getElementById('recFlag');
         flagEl.textContent = flag.toUpperCase();
