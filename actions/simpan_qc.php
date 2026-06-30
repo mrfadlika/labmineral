@@ -31,7 +31,7 @@ if ($action === 'input' || !$action) {
     }
 
     $nilaiQc   = (float)($_POST['nilai_qc']       ?? 0);
-    $nilaiExp  = !empty($_POST['nilai_expected']) ? (int)$_POST['nilai_expected'] : null;
+    $nilaiExp  = !empty($_POST['nilai_expected']) ? (float)$_POST['nilai_expected'] : null;
     $bMinPct   = (float)($_POST['batas_min_pct']  ?? 85);
     $bMaksPct  = (float)($_POST['batas_maks_pct'] ?? 115);
 
@@ -41,7 +41,7 @@ if ($action === 'input' || !$action) {
     $flag   = 'pass';
     if ($nilaiExp !== null) {
         $diff = abs($nilaiQc - $nilaiExp);
-        if ($diff <= 0.05) $flag = 'pass';
+        if (round($diff, 4) <= 0.05) $flag = 'pass';
         else $flag = 'fail';
     }
 
@@ -70,7 +70,7 @@ if ($action === 'input' || !$action) {
 
 if ($action === 'manage') {
     $sampleKey = trim($_POST['manajemen_id_sampel'] ?? '');
-    $nilaiCert = !empty($_POST['manajemen_nilai_sertifikat']) ? (int) $_POST['manajemen_nilai_sertifikat'] : null;
+    $nilaiCert = !empty($_POST['manajemen_nilai_sertifikat']) ? (float) $_POST['manajemen_nilai_sertifikat'] : null;
     $parameter = trim($_POST['manajemen_parameter'] ?? '');
 
     if ($sampleKey === '' || $parameter === '' || $nilaiCert === null) {

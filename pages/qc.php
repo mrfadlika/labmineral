@@ -270,11 +270,19 @@ require_once __DIR__ . '/../includes/header.php';
             <input type="hidden" name="action" value="manage" />
             <div class="form-group">
                 <label>ID / Kode Sampel</label>
-                <input name="manajemen_id_sampel" placeholder="Masukkan ID atau Kode Sampel" <?= $isReadOnly ? 'readonly disabled' : '' ?> />
+                <?php 
+                $listSampel = $pdo->query("SELECT kode_sampel, jenis_material FROM sampel ORDER BY id DESC")->fetchAll();
+                ?>
+                <select name="manajemen_id_sampel" <?= $isReadOnly ? 'disabled' : '' ?>>
+                    <option value="">-- Pilih Sampel --</option>
+                    <?php foreach($listSampel as $ls): ?>
+                        <option value="<?= bersihkan($ls['kode_sampel']) ?>"><?= bersihkan($ls['kode_sampel']) ?> (<?= bersihkan($ls['jenis_material']) ?>)</option>
+                    <?php endforeach; ?>
+                </select>
             </div>
             <div class="form-group">
                 <label>Nilai Sertifikat</label>
-                <input name="manajemen_nilai_sertifikat" placeholder="Masukkan nilai sertifikat" <?= $isReadOnly ? 'readonly disabled' : '' ?> />
+                <input type="number" step="0.0001" name="manajemen_nilai_sertifikat" placeholder="Masukkan nilai sertifikat (contoh: 10.05)" <?= $isReadOnly ? 'readonly disabled' : '' ?> />
             </div>
             <div class="form-group">
                 <label>Parameter</label>
@@ -595,18 +603,19 @@ function hitungRecovery() {
 
     if (!isNaN(nilai) && !isNaN(expected) && expected > 0) {
         const diff = Math.abs(nilai - expected);
+        const diffRounded = Number(diff.toFixed(4));
         const rec = (nilai / expected) * 100;
         prev.style.display = 'block';
-        document.getElementById('recVal').textContent = 'Selisih: ' + diff.toFixed(4) + ' (' + rec.toFixed(2) + '%)';
+        document.getElementById('recVal').textContent = 'Selisih: ' + diffRounded.toFixed(4) + ' (' + rec.toFixed(2) + '%)';
 
         let flag = 'pass', col = 'var(--green3)';
-        if (diff <= 0.05) { 
+        if (diffRounded <= 0.05) { 
             flag = 'pass'; col = 'var(--green3)'; 
         } else { 
             flag = 'fail'; col = 'var(--red)'; 
         }
 
-        document.getElementById('recBarFill').style.width = diff <= 0.05 ? '100%' : '20%';
+        document.getElementById('recBarFill').style.width = diffRounded <= 0.05 ? '100%' : '20%';
         document.getElementById('recBarFill').style.background = col;
         const flagEl = document.getElementById('recFlag');
         flagEl.textContent = flag.toUpperCase();

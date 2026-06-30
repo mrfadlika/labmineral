@@ -100,8 +100,11 @@ try {
     $penerimaanId = $pdo->lastInsertId();
 
     // 2. Auto-generate kode sampel berikutnya
-    $lastKode = $pdo->query("SELECT kode_sampel FROM sampel ORDER BY id DESC LIMIT 1")->fetchColumn();
-    $nextNum  = $lastKode ? (intval(substr($lastKode, -3)) + 1) : 1;
+    $prefix = 'S-' . date('ym') . '-';
+    $lastKode = $pdo->prepare("SELECT kode_sampel FROM sampel WHERE kode_sampel LIKE ? ORDER BY kode_sampel DESC LIMIT 1");
+    $lastKode->execute([$prefix . '%']);
+    $lastKodeStr = $lastKode->fetchColumn();
+    $nextNum  = $lastKodeStr ? (intval(substr($lastKodeStr, -3)) + 1) : 1;
 
     // 3. Insert setiap sampel
     $stmtSampel = $pdo->prepare(

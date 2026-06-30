@@ -46,7 +46,7 @@ try {
         INSERT INTO submission_sampel 
         (nomor_submission, klien, kontak_person, email, telepon, alamat, 
          po_referensi, instruksi_khusus, catatan, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'diproses')
     ");
     $stmt->execute([
         $nomorSubmission,
@@ -78,17 +78,94 @@ try {
             trim($s['keterangan'] ?? '')
         ]);
     }
+
+    // --- OTOMATIS KE DAFTAR PENERIMAAN SAMPEL & SAMPEL ---
+    // 1. Dapatkan ID Admin sebagai pembuat (dibuat_oleh)
+    $adminQuery = $pdo->query("SELECT id FROM pengguna WHERE role = 'admin' ORDER BY id ASC LIMIT 1");
+    $adminUser = $adminQuery->fetch();
+    $dibuatOleh = $adminUser ? (int)$adminUser['id'] : null;
+
+    // 2. Generate nomor penerimaan
+    $lastRec = $pdo->query("SELECT nomor_penerimaan FROM penerimaan_sampel ORDER BY id DESC LIMIT 1")->fetchColumn();
+    $nextNum = $lastRec ? (intval(substr($lastRec, -3)) + 1) : 1;
+    $noPenerimaan = 'REC-' . date('ym') . '-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
+
+    // Kumpulkan jenis material dan metode unik
+    $materials = array_unique(array_column($sampelInput, 'jenis_material'));
+    $metodes = array_unique(array_column($sampelInput, 'metode_uji'));
+    $materialStr = implode(', ', array_filter($materials));
+    $metodeStr = implode(', ', array_filter($metodes));
+
+    // Buat keterangan dari instruksi submission
+    $recKeterangan = 'Dari submission: ' . $nomorSubmission;
+    if (!empty($instruksiKhusus)) {
+        $recKeterangan .= ' - Instruksi: ' . $instruksiKhusus;
+    }
+
+    // Insert ke penerimaan_sampel
+    $stmtRec = $pdo->prepare("
+        INSERT INTO penerimaan_sampel 
+        (nomor_penerimaan, klien, tanggal_terima, jumlah_sampel, jenis_material, metode_uji, keterangan, status, dibuat_oleh)
+        VALUES (?, ?, ?, ?, ?, ?, ?, 'diterima', ?)
+    ");
+    $stmtRec->execute([
+        $noPenerimaan,
+        $klien,
+        date('Y-m-d'),
+        count($sampelInput),
+        $materialStr,
+        $metodeStr,
+        $recKeterangan,
+        $dibuatOleh
+    ]);
+    $penerimaanId = $pdo->lastInsertId();
+
+    // 3. Generate kode sampel berurutan
+    $prefix = 'S-' . date('ym') . '-';
+    $lastKode = $pdo->prepare("SELECT kode_sampel FROM sampel WHERE kode_sampel LIKE ? ORDER BY kode_sampel DESC LIMIT 1");
+    $lastKode->execute([$prefix . '%']);
+    $lastKodeStr = $lastKode->fetchColumn();
+    $nextKodeNum = $lastKodeStr ? (intval(substr($lastKodeStr, -3)) + 1) : 1;
+
+    // Insert sampel
+    $stmtSampel = $pdo->prepare("
+        INSERT INTO sampel 
+        (penerimaan_id, kode_sampel, tanggal_masuk, jenis_material, berat_gram, klien, metode_uji, keterangan, dibuat_oleh)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+
+    foreach ($sampelInput as $s) {
+        $kodeSampel = 'S-' . date('ym') . '-' . str_pad($nextKodeNum, 3, '0', STR_PAD_LEFT);
+        $sampelKeterangan = trim($s['keterangan'] ?? '');
+        if (!empty($nomorSubmission)) {
+            $sampelKeterangan .= ($sampelKeterangan !== '' ? ' ' : '') . '(dari submission: ' . $nomorSubmission . ')';
+        }
+
+        $stmtSampel->execute([
+            $penerimaanId,
+            $kodeSampel,
+            date('Y-m-d'),
+            trim($s['jenis_material'] ?? ''),
+            !empty($s['berat_gram']) ? (float)$s['berat_gram'] : null,
+            $klien,
+            trim($s['metode_uji'] ?? ''),
+            trim($sampelKeterangan),
+            $dibuatOleh
+        ]);
+        $nextKodeNum++;
+    }
     
     $pdo->commit();
 
     $clientAccount = createClientAccountForAccess($pdo, [
         'kode_akses' => $nomorSubmission,
         'submission_id' => $submissionId,
+        'penerimaan_id' => $penerimaanId,
         'klien' => $klien,
         'email' => $email,
     ]);
 
-    $_SESSION['success'] = "Formulir pengiriman sampel berhasil dikirim. Nomor submission: $nomorSubmission";
+    $_SESSION['success'] = "Formulir pengiriman sampel berhasil dikirim. Nomor submission: $nomorSubmission (Nomor penerimaan: $noPenerimaan)";
     $_SESSION['submission_no'] = $nomorSubmission;
     if ($clientAccount['created'] ?? false) {
         $_SESSION['client_credentials'] = $clientAccount;

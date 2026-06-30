@@ -410,9 +410,14 @@ $noAuto = 'SUB-' . date('ymd') . '-' . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
                 <?php if ($clientCredentials): ?>
                     <div style="margin:22px auto 0;max-width:460px;text-align:center;background:rgba(232,180,0,0.05);border:1px dashed var(--gold-dim);border-radius:10px;padding:18px 20px">
                         <div style="color:var(--gold);font-weight:700;margin-bottom:10px">Akun Monitoring Sampel</div>
-                        <p style="margin-bottom:0;color:var(--text-muted);font-size:13px">
-                            Akun monitoring Anda telah berhasil dibuat. Informasi <strong>Username & Password</strong> akan dikirimkan oleh petugas kami melalui nomor WhatsApp yang Anda daftarkan.
+                        <p style="margin-bottom:12px;color:var(--text-muted);font-size:13px">
+                            Akun monitoring Anda telah berhasil dibuat. Gunakan kredensial di bawah ini untuk memantau status sampel Anda:
                         </p>
+                        <div style="margin-bottom:14px;font-size:14px;color:var(--text-main);line-height:1.8">
+                            <strong>Username:</strong> <code style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:5px;font-family:monospace;border:1px solid rgba(232,180,0,0.2)"><?= htmlspecialchars($clientCredentials['username']) ?></code><br>
+                            <strong>Password:</strong> <code style="background:rgba(255,255,255,0.08);padding:3px 8px;border-radius:5px;font-family:monospace;border:1px solid rgba(232,180,0,0.2)"><?= htmlspecialchars($clientCredentials['password']) ?></code>
+                        </div>
+                        <a href="<?= BASE_URL ?>/index.php" class="btn btn-primary" style="display:inline-block;padding:8px 16px;font-size:12px;text-decoration:none;margin-top:4px">🔑 Masuk ke Portal Monitoring</a>
                     </div>
                 <?php endif; ?>
 
