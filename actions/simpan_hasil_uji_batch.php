@@ -59,8 +59,8 @@ try {
         $sampelId = (int)$r['sampel_id'];
         $nilai    = (float)$r['nilai'];
 
-        // Kesimpulan selalu 'lulus' — batas min/maks dihapus dari form
-        $kes = 'lulus';
+        // Ambil nilai kesimpulan dari dropdown di baris hasil uji (default: pending)
+        $kes = $r['kesimpulan'] ?? 'pending';
 
         // Kode uji berurutan (FIX K-2: increment dari nilai awal, bukan query ulang)
         $kode = 'U-' . str_pad($nextUjiNum, 3, '0', STR_PAD_LEFT);

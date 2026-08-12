@@ -12,6 +12,49 @@ cekLogin();
 $action = $_POST['action'] ?? 'insert';
 
 // ============================================================
+// HAPUS HASIL UJI
+// ============================================================
+if ($action === 'hapus') {
+    $id = (int)($_POST['id'] ?? 0);
+    $redirect = $_POST['redirect'] ?? BASE_URL . '/pages/pengujian.php?tab=hasil';
+    if ($id) {
+        try {
+            $pdo->beginTransaction();
+            // Cari sampel_id dan penerimaan_id dari hasil uji yang akan dihapus
+            $stSampel = $pdo->prepare("SELECT h.sampel_id, s.penerimaan_id FROM hasil_uji h JOIN sampel s ON h.sampel_id = s.id WHERE h.id = ?");
+            $stSampel->execute([$id]);
+            $info = $stSampel->fetch();
+            
+            $pdo->prepare("DELETE FROM hasil_uji WHERE id = ?")->execute([$id]);
+            
+            if ($info) {
+                // Cek apakah sampel ini masih punya hasil uji lain
+                $stCek = $pdo->prepare("SELECT COUNT(*) FROM hasil_uji WHERE sampel_id = ?");
+                $stCek->execute([$info['sampel_id']]);
+                if ($stCek->fetchColumn() == 0) {
+                    // Kembalikan status sampel ke 'diuji'
+                    $pdo->prepare("UPDATE sampel SET status = 'diuji' WHERE id = ?")->execute([$info['sampel_id']]);
+                }
+                
+                if ($info['penerimaan_id']) {
+                    // Karena ada hasil uji yang dihapus, penerimaan ini pasti belum selesai 100%
+                    $pdo->prepare("UPDATE penerimaan_sampel SET status = 'diproses' WHERE id = ?")->execute([$info['penerimaan_id']]);
+                    // Cabut akses client karena belum selesai
+                    $pdo->prepare("UPDATE client_access SET status = 'aktif' WHERE penerimaan_id = ?")->execute([$info['penerimaan_id']]);
+                }
+            }
+            $pdo->commit();
+            $_SESSION['msg'] = 'Hasil uji berhasil dihapus.';
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            $_SESSION['msg'] = 'ERROR: Gagal menghapus hasil uji.';
+        }
+    }
+    header('Location: ' . $redirect);
+    exit;
+}
+
+// ============================================================
 // EDIT HASIL UJI
 // ============================================================
 if ($action === 'edit') {

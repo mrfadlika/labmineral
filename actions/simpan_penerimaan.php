@@ -131,6 +131,27 @@ try {
         $nextNum++;
     }
 
+    // 4. Backward Sync ke tabel submission klien (jika dari form SSF)
+    $fromSubmission = (int)($_POST['from_submission'] ?? 0);
+    if ($fromSubmission > 0) {
+        // Update status
+        $pdo->prepare("UPDATE submission_sampel SET status = 'diproses' WHERE id = ?")->execute([$fromSubmission]);
+        
+        // Hapus detail lama, ganti dengan data sampel aktual yang baru diinput admin lab
+        $pdo->prepare("DELETE FROM submission_sampel_detail WHERE submission_id = ?")->execute([$fromSubmission]);
+        $stmtSubDetail = $pdo->prepare("INSERT INTO submission_sampel_detail (submission_id, jenis_material, berat_gram, metode_uji, keterangan) VALUES (?, ?, ?, ?, ?)");
+        
+        foreach ($sampelInput as $s) {
+            $stmtSubDetail->execute([
+                $fromSubmission,
+                trim($s['jenis_material'] ?? ''),
+                !empty($s['berat_gram']) ? (float)$s['berat_gram'] : null,
+                trim($s['metode_uji'] ?? ''),
+                trim($s['keterangan'] ?? '')
+            ]);
+        }
+    }
+
     $pdo->commit();
 
     $jumlah = count($kodeList);

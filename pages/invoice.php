@@ -336,9 +336,9 @@ require_once __DIR__ . '/../includes/header.php';
                 32tr
                     <th style="width:36px">No.</th>
                     <th>Deskripsi Layanan</th>
-                    <th style="width:50px">Qty</th>
-                    <th style="width:110px">Harga Satuan (Rp)</th>
-                    <th style="width:110px">Subtotal (Rp)</th>
+                    <th style="width:80px">Qty</th>
+                    <th style="width:160px">Harga Satuan (Rp)</th>
+                    <th style="width:140px">Subtotal (Rp)</th>
                     <th style="width:36px"></th>
                 </tr>
             </thead>

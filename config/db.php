@@ -565,3 +565,38 @@ function createClientAccountForAccess($pdo, $data) {
         'user_id' => $userId
     ];
 }
+
+/**
+ * Sinkronisasi status penyelesaian penerimaan sampel dan sampel di dalamnya.
+ */
+function syncPenerimaanCompletion($pdo, $penerimaanId) {
+    $penerimaanId = (int)$penerimaanId;
+    if ($penerimaanId <= 0) return;
+    
+    try {
+        // Otomatis tandai sampel sebagai 'selesai' jika sudah memiliki hasil uji
+        $pdo->prepare("
+            UPDATE sampel 
+            SET status = 'selesai' 
+            WHERE penerimaan_id = ? 
+              AND id IN (SELECT sampel_id FROM hasil_uji)
+        ")->execute([$penerimaanId]);
+        
+        // Cek apakah semua sampel di dalam penerimaan ini sudah selesai
+        $st = $pdo->prepare("
+            SELECT COUNT(*) as total, 
+                   SUM(CASE WHEN status = 'selesai' THEN 1 ELSE 0 END) as done
+            FROM sampel 
+            WHERE penerimaan_id = ?
+        ");
+        $st->execute([$penerimaanId]);
+        $row = $st->fetch();
+        
+        // Jika semuanya selesai, update status penerimaan_sampel
+        if ($row && $row['total'] > 0 && $row['total'] == $row['done']) {
+            $pdo->prepare("UPDATE penerimaan_sampel SET status = 'selesai' WHERE id = ?")->execute([$penerimaanId]);
+        }
+    } catch (Exception $e) {
+        // Abaikan error sinkronisasi
+    }
+}

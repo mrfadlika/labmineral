@@ -26,16 +26,9 @@ $sampelAktif = $pdo->query("
            ) AS label_lengkap
     FROM sampel s
     LEFT JOIN penerimaan_sampel rec ON s.penerimaan_id = rec.id
-    WHERE s.status IN ('antrian','diuji')
+    WHERE s.status IN ('antrian','diuji','selesai')
       AND s.id NOT IN (SELECT DISTINCT sampel_id FROM hasil_uji)
-      AND EXISTS (
-          SELECT 1 FROM qc_sampel q
-          LEFT JOIN work_order_sampel wos_qc ON q.sampel_id = wos_qc.sampel_id
-          LEFT JOIN work_order_sampel wos_s ON wos_qc.wo_id = wos_s.wo_id
-          WHERE (q.sampel_id = s.id OR wos_s.sampel_id = s.id)
-            AND q.status_qc = 'disetujui'
-            AND q.flag = 'pass'
-      )
+      AND s.id IN (SELECT DISTINCT sampel_id FROM preparasi_sampel)
     ORDER BY rec.nomor_penerimaan, s.kode_sampel
 ")->fetchAll();
 
@@ -59,13 +52,7 @@ $woAktifList = $pdo->query("
     LEFT JOIN penerimaan_sampel rec ON w.penerimaan_id = rec.id
     LEFT JOIN work_order_sampel wos ON wos.wo_id = w.id
     WHERE w.status = 'aktif'
-      AND EXISTS (
-          SELECT 1 FROM qc_sampel q
-          JOIN work_order_sampel wos_qc ON q.sampel_id = wos_qc.sampel_id
-          WHERE wos_qc.wo_id = w.id
-            AND q.status_qc = 'disetujui'
-            AND q.flag = 'pass'
-      )
+      AND w.id IN (SELECT DISTINCT work_order_id FROM preparasi_sampel)
     GROUP BY w.id
     ORDER BY FIELD(w.prioritas,'urgent','tinggi','normal'), w.jadwal_mulai ASC
 ")->fetchAll();
@@ -299,12 +286,22 @@ require_once __DIR__ . '/../includes/header.php';
                 <td><?= badgeStatus($h['kesimpulan']) ?></td>
                 <td style="white-space:nowrap">
                     <?php if ($canEdit): ?>
-                        <button onclick="openEditModal(<?= $h['id'] ?>)" 
-                                class="btn btn-gold btn-sm" 
-                                style="font-size:.68rem;padding:3px 8px"
-                                title="Edit hasil uji">
-                            ✏️ Edit
-                        </button>
+                        <div style="display:flex;gap:4px">
+                            <button onclick="openEditModal(<?= $h['id'] ?>)" 
+                                    class="btn btn-gold btn-sm" 
+                                    style="font-size:.68rem;padding:3px 8px"
+                                    title="Edit hasil uji">
+                                ✏️ Edit
+                            </button>
+                            <form method="POST" action="<?= BASE_URL ?>/actions/simpan_hasil_uji.php" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus hasil uji ini?');">
+                                <input type="hidden" name="action" value="hapus">
+                                <input type="hidden" name="id" value="<?= $h['id'] ?>">
+                                <input type="hidden" name="redirect" value="<?= BASE_URL ?>/pages/pengujian.php?tab=hasil">
+                                <button type="submit" class="btn btn-red btn-sm" style="font-size:.68rem;padding:3px 8px" title="Hapus hasil uji">
+                                    🗑️ Hapus
+                                </button>
+                            </form>
+                        </div>
                     <?php endif; ?>
                 </td>
             </tr>
@@ -423,6 +420,7 @@ require_once __DIR__ . '/../includes/header.php';
                             <th style="padding:6px;text-align:left;color:var(--text3);font-size:.72rem;border-bottom:1px solid var(--border)">Nilai</th>
                             <th style="padding:6px;text-align:left;color:var(--text3);font-size:.72rem;border-bottom:1px solid var(--border)">Satuan</th>
                             <th style="padding:6px;text-align:left;color:var(--text3);font-size:.72rem;border-bottom:1px solid var(--border)">Metode</th>
+                            <th style="padding:6px;text-align:left;color:var(--text3);font-size:.72rem;border-bottom:1px solid var(--border)">Kesimpulan</th>
                             <th style="padding:6px;border-bottom:1px solid var(--border);width:36px"></th>
                         </tr>
                     </thead>
@@ -680,17 +678,30 @@ function loadBatchFromWo(sel) {
     const woId = sel.value;
     document.getElementById('batchUjiRows').innerHTML = '';
     ujiRowCnt = 0;
-    document.getElementById('batchRefSel').value = '';
 
-    if (!woId) { updateUjiCount(); return; }
+    if (!woId) {
+        document.getElementById('batchRefSel').value = '';
+        updateUjiCount(); return;
+    }
 
     const wo = woDetailMap[woId];
-    if (!wo) { updateUjiCount(); return; }
+    if (!wo) {
+        document.getElementById('batchRefSel').value = '';
+        updateUjiCount(); return;
+    }
 
     const paramList  = wo.paramList.length ? wo.paramList : [''];
     const sampelList = wo.sampelList;
     const metode     = wo.metode || '';
     const ref        = wo.ref   || '';
+
+    // Sinkronkan dropdown No. Ref Batch agar ikut terpilih
+    const batchRefSel = document.getElementById('batchRefSel');
+    if (ref) {
+        batchRefSel.value = ref;
+    } else {
+        batchRefSel.value = '';
+    }
 
     if (!sampelList.length) {
         alert('Semua sampel dalam WO ini sudah memiliki hasil uji.');
@@ -710,8 +721,40 @@ function loadBatchFromWo(sel) {
 function loadBatchSampel(noRec) {
     document.getElementById('batchUjiRows').innerHTML = '';
     ujiRowCnt = 0;
-    document.getElementById('batchWoSel').value = '';
-    if (!noRec) { updateUjiCount(); return; }
+
+    if (!noRec) {
+        document.getElementById('batchWoSel').value = '';
+        updateUjiCount(); return;
+    }
+
+    // Sinkronkan dropdown WO: cari WO yang memiliki ref batch ini
+    const woSel = document.getElementById('batchWoSel');
+    let woMatched = false;
+    for (let i = 0; i < woSel.options.length; i++) {
+        if (woSel.options[i].dataset.ref === noRec) {
+            woSel.selectedIndex = i;
+            woMatched = true;
+            break;
+        }
+    }
+    if (!woMatched) woSel.value = '';
+
+    // Jika WO ditemukan, load dari WO agar parameter & metode ikut terisi
+    if (woMatched && woSel.value) {
+        const wo = woDetailMap[woSel.value];
+        if (wo && wo.sampelList.length) {
+            const paramList = wo.paramList.length ? wo.paramList : [''];
+            wo.sampelList.forEach(s => {
+                paramList.forEach(param => {
+                    tambahBarisUji(s.id, noRec, param, wo.metode || '');
+                });
+            });
+            updateUjiCount();
+            return;
+        }
+    }
+
+    // Fallback: load sampel dari batch tanpa info WO
     const gParam = document.getElementById('batchParam').value;
     sampelOpts.filter(s => s.batch === noRec).forEach(s => {
         tambahBarisUji(s.id, noRec, gParam, '');
@@ -745,6 +788,13 @@ function tambahBarisUji(sampelId='', batchRef='', paramDef='', metodeDef='') {
         <td style="padding:4px"><input type="number" step="0.0001" name="rows[${i}][nilai]" placeholder="0.0000" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.75rem;width:80px"/></td>
         <td style="padding:4px"><select name="rows[${i}][satuan]" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.75rem">${satO}</select></td>
         <td style="padding:4px"><select name="rows[${i}][metode]" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.75rem">${mOpts}</select></td>
+        <td style="padding:4px">
+            <select name="rows[${i}][kesimpulan]" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.75rem">
+                <option value="pending" selected>Pending</option>
+                <option value="lulus">Lulus</option>
+                <option value="tidak_lulus">Tidak Lulus</option>
+            </select>
+        </td>
         <td style="padding:4px"><button type="button" onclick="document.getElementById('ubr${i}').remove();updateUjiCount()"
                style="background:var(--red);color:#fff;border:none;border-radius:4px;padding:3px 8px;cursor:pointer;font-size:.7rem">&#10005;</button></td>
      </tr>`;
