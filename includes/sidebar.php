@@ -43,8 +43,9 @@ if (isClient()) {
     $menu[] = ['href' => 'monitoring.php',  'ico' => '📊',         'label' => 'Monitoring Sampel'];
     $menu[] = ['href' => 'laporan.php',     'ico' => '&#128196;', 'label' => 'Laporan'];
     
-    // Tambahkan menu submission untuk admin
+    // Tambahkan menu admin
     if (isAdmin()) {
+        $menu[] = ['href' => 'xrf_data.php', 'ico' => '⚡', 'label' => 'Data XRF Explorer'];
         $menu[] = ['href' => 'submission.php', 'ico' => '📋', 'label' => 'Online Submissions'];
         $menu[] = ['href' => 'metode_preparasi.php', 'ico' => '🧪', 'label' => 'Metode Preparasi'];
         $menu[] = ['href' => 'pengguna.php', 'ico' => '&#128101;', 'label' => 'Pengguna'];

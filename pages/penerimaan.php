@@ -330,7 +330,7 @@ require_once __DIR__ . '/../includes/header.php';
 }
 #tab-daftar .data-table th:nth-child(8),
 #tab-daftar .data-table td:nth-child(8){
-    width:170px;
+    width:200px;
 }
 .aksi-wrap{
     display:flex;
@@ -439,10 +439,17 @@ require_once __DIR__ . '/../includes/header.php';
                 </td>
                 <td>
                     <div class="aksi-wrap">
-                    <a href="<?= BASE_URL ?>/exports/export_pdf.php?rec=<?= urlencode($r['nomor_penerimaan']) ?>&cetak=1"
-                       target="_blank" class="btn btn-red btn-sm" style="font-size:.68rem;padding:3px 8px" title="Export PDF Laporan">
-                        &#128196; PDF
-                    </a>
+                        <a href="<?= BASE_URL ?>/exports/export_pdf.php?rec=<?= urlencode($r['nomor_penerimaan']) ?>&cetak=1"
+                           target="_blank" class="btn btn-red btn-sm" style="font-size:.68rem;padding:3px 8px" title="Export PDF Laporan">
+                            &#128196; PDF
+                        </a>
+                        <form method="POST" action="<?= BASE_URL ?>/actions/simpan_penerimaan.php" style="display:inline" onsubmit="return confirm('⚠️ Yakin ingin menghapus batch penerimaan <?= bersihkan($r['nomor_penerimaan']) ?> (<?= bersihkan($r['klien']) ?>)?\n\nSeluruh data sampel, hasil uji, dan relasi terkait batch ini akan ikut terhapus secara permanen.');">
+                            <input type="hidden" name="action" value="hapus"/>
+                            <input type="hidden" name="id" value="<?= $r['id'] ?>"/>
+                            <button type="submit" class="btn btn-sm" style="font-size:.68rem;padding:3px 8px;background:#7f1d1d;color:#fca5a5;border:1px solid #b91c1c;cursor:pointer" title="Hapus Batch Penerimaan">
+                                🗑️ Hapus
+                            </button>
+                        </form>
                     </div>
                 </td>
             </tr>

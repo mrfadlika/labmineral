@@ -282,7 +282,7 @@ require_once __DIR__ . '/../includes/header.php';
             </div>
             <div class="form-group">
                 <label>Nilai Sertifikat</label>
-                <input type="number" step="0.0001" name="manajemen_nilai_sertifikat" placeholder="Masukkan nilai sertifikat (contoh: 10.05)" <?= $isReadOnly ? 'readonly disabled' : '' ?> />
+                <input type="number" step="any" name="manajemen_nilai_sertifikat" placeholder="Masukkan nilai sertifikat (contoh: 10.05)" <?= $isReadOnly ? 'readonly disabled' : '' ?> />
             </div>
             <div class="form-group">
                 <label>Parameter</label>
@@ -372,14 +372,14 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="form-row">
                 <div class="form-group">
                     <label>Nilai Terukur (dari instrumen) <span style="color:var(--red)">*</span></label>
-                    <input type="number" step="0.0001" name="nilai_qc"
+                    <input type="number" step="any" name="nilai_qc"
                            id="nilaiQcInput" placeholder="0.0000" <?= $isReadOnly ? 'readonly disabled' : '' ?> required oninput="hitungRecovery()"/>
                 </div>
                 <div class="form-group">
                     <label>Nilai Expected / Referensi
                         <span id="expSourceBadge" style="display:none;font-size:.68rem;background:var(--green3);color:#000;padding:1px 6px;border-radius:20px;margin-left:4px">&#10003; dari Manajemen QC</span>
                     </label>
-                    <input type="number" step="0.0001" min="0" name="nilai_expected"
+                    <input type="number" step="any" min="0" name="nilai_expected"
                            id="nilaiExpInput" placeholder="Otomatis dari Manajemen QC"
                            readonly
                            style="background:var(--bg2);color:var(--text3);cursor:not-allowed"/>

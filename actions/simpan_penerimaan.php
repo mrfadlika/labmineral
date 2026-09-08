@@ -29,6 +29,98 @@ if ($action === 'update_status') {
     exit;
 }
 
+// ── Hapus batch penerimaan + relasi ─────────────────────────
+if ($action === 'hapus') {
+    $id = (int)($_POST['id'] ?? $_GET['id'] ?? 0);
+    if ($id <= 0) {
+        $_SESSION['msg'] = 'ERROR: ID Penerimaan tidak valid.';
+        header('Location: ' . BASE_URL . '/pages/penerimaan.php');
+        exit;
+    }
+
+    try {
+        $pdo->beginTransaction();
+
+        // 1. Ambil nomor penerimaan
+        $st = $pdo->prepare("SELECT nomor_penerimaan, keterangan FROM penerimaan_sampel WHERE id = ?");
+        $st->execute([$id]);
+        $recData = $st->fetch();
+
+        if (!$recData) {
+            $_SESSION['msg'] = 'ERROR: Data penerimaan tidak ditemukan.';
+            $pdo->rollBack();
+            header('Location: ' . BASE_URL . '/pages/penerimaan.php');
+            exit;
+        }
+
+        $noRec = $recData['nomor_penerimaan'];
+
+        // 2. Ambil semua sampel_id dalam batch penerimaan ini
+        $stSampel = $pdo->prepare("SELECT id FROM sampel WHERE penerimaan_id = ?");
+        $stSampel->execute([$id]);
+        $sampelIds = $stSampel->fetchAll(PDO::FETCH_COLUMN);
+
+        if (!empty($sampelIds)) {
+            $inSampel = implode(',', array_fill(0, count($sampelIds), '?'));
+            
+            // Hapus hasil_uji
+            $pdo->prepare("DELETE FROM hasil_uji WHERE sampel_id IN ($inSampel)")->execute($sampelIds);
+            
+            // Hapus qc_sampel jika tabel ada
+            if (tableExists($pdo, 'qc_sampel')) {
+                $pdo->prepare("DELETE FROM qc_sampel WHERE sampel_id IN ($inSampel)")->execute($sampelIds);
+            }
+
+            // Hapus preparasi_sampel
+            $pdo->prepare("DELETE FROM preparasi_sampel WHERE sampel_id IN ($inSampel)")->execute($sampelIds);
+
+            // Hapus work_order_sampel
+            $pdo->prepare("DELETE FROM work_order_sampel WHERE sampel_id IN ($inSampel)")->execute($sampelIds);
+        }
+
+        // 3. Ambil work_order yang terikat ke penerimaan_id ini
+        $stWo = $pdo->prepare("SELECT id FROM work_order WHERE penerimaan_id = ?");
+        $stWo->execute([$id]);
+        $woIds = $stWo->fetchAll(PDO::FETCH_COLUMN);
+        if (!empty($woIds)) {
+            $inWo = implode(',', array_fill(0, count($woIds), '?'));
+            $pdo->prepare("DELETE FROM work_order_sampel WHERE wo_id IN ($inWo)")->execute($woIds);
+            $pdo->prepare("DELETE FROM preparasi_sampel WHERE work_order_id IN ($inWo)")->execute($woIds);
+            $pdo->prepare("DELETE FROM work_order WHERE id IN ($inWo)")->execute($woIds);
+        }
+
+        // 4. Hapus invoice terkait jika ada
+        if (tableExists($pdo, 'invoice')) {
+            $pdo->prepare("DELETE FROM invoice WHERE penerimaan_id = ?")->execute([$id]);
+        }
+
+        // 5. Update client_access agar penerimaan_id dilepas
+        if (tableExists($pdo, 'client_access')) {
+            $pdo->prepare("UPDATE client_access SET penerimaan_id = NULL WHERE penerimaan_id = ?")->execute([$id]);
+        }
+
+        // 6. Hapus semua sampel dalam batch
+        $pdo->prepare("DELETE FROM sampel WHERE penerimaan_id = ?")->execute([$id]);
+
+        // 7. Hapus penerimaan_sampel
+        $pdo->prepare("DELETE FROM penerimaan_sampel WHERE id = ?")->execute([$id]);
+
+        // 8. Jika ada submission terkait dari keterangan, kembalikan statusnya ke 'diterima'
+        if (preg_match('/SUB-[0-9\-]+/', $recData['keterangan'] ?? '', $mSub)) {
+            $pdo->prepare("UPDATE submission_sampel SET status = 'diterima' WHERE nomor_submission = ?")->execute([$mSub[0]]);
+        }
+
+        $pdo->commit();
+        $_SESSION['msg'] = "Batch Penerimaan $noRec beserta seluruh sampel terkait berhasil dihapus.";
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        $_SESSION['msg'] = 'ERROR: Gagal menghapus penerimaan: ' . $e->getMessage();
+    }
+
+    header('Location: ' . BASE_URL . '/pages/penerimaan.php');
+    exit;
+}
+
 // ── Konfirmasi admin ─────────────────────────────────────────
 if ($action === 'konfirmasi') {
     $pdo->prepare("UPDATE penerimaan_sampel SET is_confirmed = 1 WHERE id = ?")
@@ -160,6 +252,7 @@ try {
 
     $clientAccount = createClientAccountForAccess($pdo, [
         'kode_akses' => $noPenerimaan,
+        'submission_id' => $fromSubmission > 0 ? $fromSubmission : null,
         'penerimaan_id' => $penerimaanId,
         'klien' => $klien,
     ]);

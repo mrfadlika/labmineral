@@ -6,7 +6,10 @@
 session_start();
 require_once __DIR__ . '/../config/db.php';
 cekLogin();
+
 $pageTitle = 'Pengujian';
+
+
 
 $msg = $_SESSION['msg'] ?? ''; unset($_SESSION['msg']);
 $tab = $_GET['tab'] ?? 'hasil';
@@ -194,6 +197,124 @@ require_once __DIR__ . '/../includes/header.php';
     font-size: .75rem;
     color: var(--text3);
     margin-bottom: 4px;
+}
+
+/* Modal XRF Picker - Fixed Consistent Dimension */
+.modal-xrf {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(4px);
+    z-index: 1050;
+    justify-content: center;
+    align-items: center;
+}
+.modal-xrf-content {
+    background: var(--bg2);
+    border-radius: 12px;
+    width: 1060px;
+    max-width: 95vw;
+    height: 680px;
+    max-height: 90vh;
+    padding: 20px 22px;
+    border: 1px solid var(--gold);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+.modal-xrf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.xrf-filter-bar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+}
+.xrf-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.xrf-filter-group label {
+    font-size: .72rem;
+    color: var(--text3);
+    font-weight: 600;
+}
+.xrf-table-container {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg3);
+}
+.xrf-table-container thead th {
+    position: sticky;
+    top: 0;
+    background: #142319;
+    z-index: 3;
+    box-shadow: 0 1px 0 var(--border);
+}
+.btn-outline-xrf {
+    background: #0f2942;
+    color: #38bdf8;
+    border: 1px solid #0284c7;
+    font-size: .72rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: .15s ease;
+}
+.btn-outline-xrf:hover {
+    background: #0284c7;
+    color: #ffffff;
+}
+.btn-outline-xrf.selected {
+    background: #064e3b;
+    color: #6ee7b7;
+    border-color: #059669;
+}
+.xrf-badge-mode {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: .68rem;
+    font-weight: 600;
+}
+.xrf-mode-mineral { background: #064e3b; color: #6ee7b7; border: 1px solid #047857; }
+.xrf-mode-alloy { background: #1e3a8a; color: #93c5fd; border: 1px solid #3b82f6; }
+.xrf-mode-metal { background: #451a03; color: #fde047; border: 1px solid #d97706; }
+.xrf-element-pill {
+    display: inline-block;
+    background: #1e293b;
+    color: #e2e8f0;
+    border: 1px solid #334155;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: .68rem;
+    margin-right: 4px;
+    margin-bottom: 2px;
 }
 </style>
 
@@ -416,6 +537,7 @@ require_once __DIR__ . '/../includes/header.php';
                         <tr>
                             <th style="padding:6px;text-align:left;color:var(--text3);font-size:.72rem;border-bottom:1px solid var(--border)">No. Ref. Batch</th>
                             <th style="padding:6px;text-align:left;color:var(--text3);font-size:.72rem;border-bottom:1px solid var(--border)">Sampel</th>
+                              <th style="padding:6px;text-align:left;color:var(--text3);font-size:.72rem;border-bottom:1px solid var(--border);color:#60a5fa">Data XRF</th>
                             <th style="padding:6px;text-align:left;color:var(--text3);font-size:.72rem;border-bottom:1px solid var(--border)">Parameter</th>
                             <th style="padding:6px;text-align:left;color:var(--text3);font-size:.72rem;border-bottom:1px solid var(--border)">Nilai</th>
                             <th style="padding:6px;text-align:left;color:var(--text3);font-size:.72rem;border-bottom:1px solid var(--border)">Satuan</th>
@@ -510,7 +632,7 @@ require_once __DIR__ . '/../includes/header.php';
             <div class="form-row">
                 <div class="form-group">
                     <label>Nilai</label>
-                    <input type="number" step="0.0001" name="nilai" id="edit_nilai" class="form-control" required/>
+                    <input type="number" step="any" name="nilai" id="edit_nilai" class="form-control" required/>
                 </div>
                 <div class="form-group">
                     <label>Satuan</label>
@@ -580,6 +702,90 @@ require_once __DIR__ . '/../includes/header.php';
     </div>
 </div>
 
+<!-- MODAL PILIH DATA XRF -->
+<div id="xrfPickerModal" class="modal-xrf">
+    <div class="modal-xrf-content">
+        <div class="modal-xrf-header">
+            <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:1.4rem">⚡</span>
+                <div>
+                    <h3 style="margin:0;color:var(--gold);font-size:1.1rem;font-weight:700">Pilih Data Pengukuran XRF Explorer 7000</h3>
+                    <p style="margin:0;font-size:.74rem;color:var(--text3)">Filter dan pilih data hasil scan XRF untuk mengisi parameter dan nilai secara instan.</p>
+                </div>
+            </div>
+            <button type="button" class="modal-edit-close" onclick="closeXrfPickerModal()">&times;</button>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="xrf-filter-bar">
+            <!-- Filter Tanggal (Range) -->
+            <div class="xrf-filter-group">
+                <label>📅 Rentang Tanggal Scan</label>
+                <div style="display:flex;align-items:center;gap:6px">
+                    <input type="date" id="xrfModalStartDate" class="form-control" style="padding:5px 8px;font-size:.75rem"/>
+                    <span style="color:var(--text3);font-size:.75rem">s/d</span>
+                    <input type="date" id="xrfModalEndDate" class="form-control" style="padding:5px 8px;font-size:.75rem"/>
+                </div>
+            </div>
+
+            <!-- Jenis / Nama Mode -->
+            <div class="xrf-filter-group" style="min-width:180px">
+                <label>🏷️ Jenis (Nama Mode / DB Source)</label>
+                <select id="xrfModalMode" class="form-control" style="padding:5px 8px;font-size:.75rem" onchange="fetchXrfModalData()">
+                    <option value="all">Semua Jenis / Mode</option>
+                    <option value="mineral.db">mineral.db (Mineral &amp; Batuan)</option>
+                    <option value="alloy.db">alloy.db (Logam &amp; Alloy)</option>
+                    <option value="metal.db">metal.db (Precious Metals)</option>
+                </select>
+            </div>
+
+            <!-- Pencarian -->
+            <div class="xrf-filter-group" style="flex:1;min-width:180px">
+                <label>🔍 Pencarian (Sampel / Operator / Kurva / Grade)</label>
+                <input type="text" id="xrfModalSearch" class="form-control" placeholder="Ketik nama sampel, operator, grade..." style="padding:5px 8px;font-size:.75rem" onkeydown="if(event.key==='Enter'){event.preventDefault();fetchXrfModalData();}"/>
+            </div>
+
+            <!-- Buttons -->
+            <div class="xrf-filter-group" style="align-self:flex-end;display:flex;gap:6px">
+                <button type="button" class="btn btn-green btn-sm" onclick="fetchXrfModalData()" style="padding:6px 14px">🔍 Terapkan</button>
+                <button type="button" class="btn btn-sm" onclick="resetXrfModalFilter()" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border);padding:6px 10px">Reset</button>
+            </div>
+        </div>
+
+        <!-- Info & Target Baris -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:.75rem">
+            <span id="xrfModalCount" style="color:var(--text3)">Memuat data...</span>
+            <span id="xrfActiveTargetRow" style="color:var(--gold);font-weight:600"></span>
+        </div>
+
+        <!-- Data Table in Modal -->
+        <div class="xrf-table-container">
+            <table class="data-table" style="font-size:.76rem" id="xrfModalTable">
+                <thead>
+                    <tr>
+                        <th style="width:130px">Waktu Scan</th>
+                        <th style="width:130px">Nama Sampel</th>
+                        <th style="width:100px">Mode / DB</th>
+                        <th style="width:150px">Kurva Kerja / Operator</th>
+                        <th>Kandungan Unsur (Elements)</th>
+                        <th style="width:80px;text-align:center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="xrfModalTableBody">
+                    <tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">Memuat data XRF...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-edit-footer" style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;">
+            <span style="font-size:.72rem;color:var(--text3)">💡 Memilih data XRF akan otomatis mengisi parameter, nilai, satuan, dan membuat baris turunan jika memiliki banyak unsur.</span>
+            <button type="button" class="btn btn-sm" onclick="closeXrfPickerModal()" style="background:var(--bg3);color:var(--text2);border:1px solid var(--border)">Tutup</button>
+        </div>
+    </div>
+</div>
+
+
 <script>
 // ── TAB ───────────────────────────────────────────────────────
 function switchTab(name, el) {
@@ -633,6 +839,240 @@ window.addEventListener('load', () => {
 const sampelOpts = <?= json_encode(array_map(fn($s)=>['id'=>$s['id'],'label'=>$s['label_lengkap'],'batch'=>$s['nomor_penerimaan']??'','klien'=>$s['klien']], $sampelAktif)) ?>;
 const metOpts    = <?= json_encode($metodeOpts) ?>;
 const satOpts    = <?= json_encode($satuanOpts) ?>;
+
+// ── XRF MODAL PICKER & BATCH UJI ──────────────────────────────
+let currentTargetRowIndex = null;
+let xrfModalDataCache = [];
+
+function openXrfPickerModal(rowIndex) {
+    currentTargetRowIndex = rowIndex;
+    
+    // Get row sample info to display target
+    const row = document.getElementById(`ubr${rowIndex}`);
+    let targetLabel = `Baris #${rowIndex}`;
+    if (row) {
+        const selectSampel = row.querySelector(`select[name="rows[${rowIndex}][sampel_id]"]`);
+        if (selectSampel && selectSampel.selectedIndex > 0) {
+            targetLabel += ` · Sampel: ${selectSampel.options[selectSampel.selectedIndex].text}`;
+        }
+    }
+    document.getElementById('xrfActiveTargetRow').textContent = `🎯 Mengisi untuk: ${targetLabel}`;
+    document.getElementById('xrfPickerModal').style.display = 'flex';
+    
+    if (xrfModalDataCache.length === 0) {
+        fetchXrfModalData();
+    }
+}
+
+function closeXrfPickerModal() {
+    document.getElementById('xrfPickerModal').style.display = 'none';
+}
+
+function fetchXrfModalData() {
+    const startDate = document.getElementById('xrfModalStartDate').value;
+    const endDate   = document.getElementById('xrfModalEndDate').value;
+    const mode      = document.getElementById('xrfModalMode').value;
+    const search    = document.getElementById('xrfModalSearch').value.trim();
+    
+    const tbody = document.getElementById('xrfModalTableBody');
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3)">⏳ Memuat data XRF dari server...</td></tr>`;
+    document.getElementById('xrfModalCount').textContent = 'Memuat...';
+
+    const params = new URLSearchParams();
+    if (startDate) params.append('start_date', startDate);
+    if (endDate)   params.append('end_date', endDate);
+    if (mode && mode !== 'all') params.append('mode', mode);
+    if (search)    params.append('search', search);
+
+    fetch(`<?= BASE_URL ?>/actions/get_xrf_measurements.php?${params.toString()}`)
+        .then(res => res.json())
+        .then(res => {
+            if (!res.success) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--red)">⚠️ ${res.message || 'Gagal mengambil data'}</td></tr>`;
+                document.getElementById('xrfModalCount').textContent = 'Gagal memuat';
+                return;
+            }
+
+            xrfModalDataCache = res.data || [];
+            document.getElementById('xrfModalCount').textContent = `Ditemukan ${xrfModalDataCache.length} data scan XRF`;
+
+            // Dynamically populate mode dropdown with work curves if not yet populated
+            const modeSelect = document.getElementById('xrfModalMode');
+            if (res.work_curves && res.work_curves.length > 0 && modeSelect.options.length <= 4) {
+                const optGroup = document.createElement('optgroup');
+                optGroup.label = 'Kurva Kerja (Work Curve)';
+                res.work_curves.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = `Kurva: ${c}`;
+                    optGroup.appendChild(opt);
+                });
+                modeSelect.appendChild(optGroup);
+            }
+
+            if (xrfModalDataCache.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:32px;color:var(--text3)">🔍 Tidak ditemukan data scan XRF yang sesuai filter.</td></tr>`;
+                return;
+            }
+
+            let html = '';
+            xrfModalDataCache.forEach(item => {
+                let badgeClass = 'xrf-mode-mineral';
+                if (item.db_source === 'alloy.db') badgeClass = 'xrf-mode-alloy';
+                else if (item.db_source === 'metal.db') badgeClass = 'xrf-mode-metal';
+
+                let elementBadges = '';
+                if (item.elements && item.elements.length > 0) {
+                    item.elements.slice(0, 5).forEach(el => {
+                        elementBadges += `<span class="xrf-element-pill"><strong>${el.element_name}</strong>: ${el.concentration}${el.unit}</span>`;
+                    });
+                    if (item.elements.length > 5) {
+                        elementBadges += `<span style="font-size:.65rem;color:var(--text3)">+${item.elements.length - 5} lainnya</span>`;
+                    }
+                } else {
+                    elementBadges = `<span style="color:var(--text3);font-size:.7rem">— Tidak ada unsur —</span>`;
+                }
+
+                html += `
+                <tr>
+                    <td style="color:var(--text3);font-size:.72rem;white-space:nowrap">${item.formatted_date}</td>
+                    <td>
+                        <strong style="color:var(--gold);font-size:.8rem">${escapeHtml(item.sample_name)}</strong>
+                        <div style="font-size:.65rem;color:var(--text3)">ID #${item.report_id || item.id}</div>
+                    </td>
+                    <td><span class="xrf-badge-mode ${badgeClass}">${item.db_source || '—'}</span></td>
+                    <td style="font-size:.73rem">
+                        <div>${escapeHtml(item.work_curve_name)}</div>
+                        <div style="font-size:.65rem;color:var(--text3)">Op: ${escapeHtml(item.operator)}</div>
+                    </td>
+                    <td>${elementBadges}</td>
+                    <td style="text-align:center;white-space:nowrap">
+                        <button type="button" class="btn btn-green btn-sm" style="font-size:.7rem;padding:3px 10px;font-weight:600" onclick="selectXrfItem(${item.id})">
+                            ✅ Pilih
+                        </button>
+                    </td>
+                </tr>`;
+            });
+
+            tbody.innerHTML = html;
+        })
+        .catch(err => {
+            console.error('Error fetching XRF data:', err);
+            tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--red)">⚠️ Terjadi kesalahan jaringan saat memuat data.</td></tr>`;
+            document.getElementById('xrfModalCount').textContent = 'Error';
+        });
+}
+
+function resetXrfModalFilter() {
+    document.getElementById('xrfModalStartDate').value = '';
+    document.getElementById('xrfModalEndDate').value = '';
+    document.getElementById('xrfModalMode').value = 'all';
+    document.getElementById('xrfModalSearch').value = '';
+    fetchXrfModalData();
+}
+
+function selectXrfItem(xrfId) {
+    if (!currentTargetRowIndex) return;
+    const rowIndex = currentTargetRowIndex;
+    
+    // Hapus baris turunan lama jika ada
+    document.querySelectorAll(`tr[data-xrf-parent="ubr${rowIndex}"]`).forEach(el => el.remove());
+    
+    const xrfData = xrfModalDataCache.find(x => x.id === xrfId);
+    if (!xrfData) {
+        closeXrfPickerModal();
+        return;
+    }
+    
+    const row = document.getElementById(`ubr${rowIndex}`);
+    if (!row) {
+        closeXrfPickerModal();
+        return;
+    }
+
+    // Update XRF button state in parent row
+    const xrfBtn = document.getElementById(`btn-xrf-row-${rowIndex}`);
+    if (xrfBtn) {
+        xrfBtn.classList.add('selected');
+        xrfBtn.innerHTML = `⚡ ${escapeHtml(xrfData.sample_name)} <span style="font-size:.65rem;opacity:.85">(${xrfData.db_source ? xrfData.db_source.replace('.db','') : ''})</span>`;
+        xrfBtn.title = `Terkait dengan scan: ${xrfData.sample_name} (${xrfData.formatted_date}) - Klik untuk ganti`;
+    }
+    
+    const xrfHidden = document.getElementById(`xrf-id-row-${rowIndex}`);
+    if (xrfHidden) xrfHidden.value = xrfData.id;
+
+    const selectSampel = row.querySelector(`select[name="rows[${rowIndex}][sampel_id]"]`);
+    const sampelIdVal = selectSampel ? selectSampel.value : '';
+    const refBadge = row.querySelector(`#ubr-ref-${rowIndex}`);
+    const batchRefVal = refBadge ? refBadge.innerText : '';
+
+    if (xrfData.elements && xrfData.elements.length > 0) {
+        // Fill the current row with the first element
+        const firstEl = xrfData.elements[0];
+        row.querySelector(`input[name="rows[${rowIndex}][parameter]"]`).value = firstEl.element_name;
+        row.querySelector(`input[name="rows[${rowIndex}][nilai]"]`).value = firstEl.concentration;
+        row.querySelector(`select[name="rows[${rowIndex}][satuan]"]`).value = firstEl.unit;
+        row.querySelector(`select[name="rows[${rowIndex}][metode]"]`).value = 'XRF';
+        
+        // Auto-spawn new rows for the remaining elements
+        for (let i = 1; i < xrfData.elements.length; i++) {
+            const el = xrfData.elements[i];
+            
+            tambahBarisUji(sampelIdVal, batchRefVal, el.element_name, 'XRF');
+            
+            const newRowIndex = ujiRowCnt;
+            const newRow = document.getElementById(`ubr${newRowIndex}`);
+            newRow.setAttribute('data-xrf-parent', `ubr${rowIndex}`);
+            newRow.querySelector(`input[name="rows[${newRowIndex}][nilai]"]`).value = el.concentration;
+            newRow.querySelector(`select[name="rows[${newRowIndex}][satuan]"]`).value = el.unit;
+            
+            // Hide repeating buttons/selectors on child rows
+            const newXrfBtn = newRow.querySelector(`#btn-xrf-row-${newRowIndex}`);
+            if (newXrfBtn) newXrfBtn.style.visibility = 'hidden';
+            
+            const sels = ['sampel_id', 'satuan', 'metode', 'kesimpulan'];
+            sels.forEach(sn => {
+                const selectEl = newRow.querySelector(`select[name="rows[${newRowIndex}][${sn}]"]`);
+                if (selectEl) {
+                    selectEl.style.visibility = 'hidden';
+                    selectEl.style.height = '0px'; 
+                    selectEl.style.padding = '0px';
+                }
+            });
+            
+            const newRefBadge = newRow.querySelector(`#ubr-ref-${newRowIndex}`);
+            if (newRefBadge) newRefBadge.style.visibility = 'hidden';
+            
+            const paramInput = newRow.querySelector(`input[name="rows[${newRowIndex}][parameter]"]`);
+            if (paramInput) {
+                paramInput.style.borderLeft = '3px solid var(--gold)';
+                paramInput.style.borderTop = 'none';
+                paramInput.style.borderRight = 'none';
+                paramInput.style.borderBottom = 'none';
+                paramInput.style.background = 'transparent';
+            }
+            
+            newRow.querySelectorAll('td').forEach(td => {
+                td.style.paddingTop = '1px';
+                td.style.paddingBottom = '1px';
+                td.style.borderBottom = 'none';
+            });
+        }
+    }
+
+    updateUjiCount();
+    closeXrfPickerModal();
+}
+
+function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
 // Map wo_id → { sampelList, paramList, metode, ref }
 const woDetailMap = <?= json_encode(
@@ -784,8 +1224,14 @@ function tambahBarisUji(sampelId='', batchRef='', paramDef='', metodeDef='') {
                 <option value="">— Pilih —</option>${sOpts}
             </select>
          </td>
+        <td style="padding:4px">
+            <button type="button" id="btn-xrf-row-${i}" class="btn-outline-xrf" onclick="openXrfPickerModal(${i})" title="Klik untuk membuka pop-up pemilih data XRF">
+                ⚡ Pilih XRF
+            </button>
+            <input type="hidden" name="rows[${i}][xrf_id]" id="xrf-id-row-${i}" value=""/>
+         </td>
         <td style="padding:4px"><input name="rows[${i}][parameter]" value="${paramDef}" placeholder="Au, Fe..." style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.75rem;width:80px"/></td>
-        <td style="padding:4px"><input type="number" step="0.0001" name="rows[${i}][nilai]" placeholder="0.0000" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.75rem;width:80px"/></td>
+        <td style="padding:4px"><input type="number" step="any" name="rows[${i}][nilai]" placeholder="0.0000" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.75rem;width:80px"/></td>
         <td style="padding:4px"><select name="rows[${i}][satuan]" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.75rem">${satO}</select></td>
         <td style="padding:4px"><select name="rows[${i}][metode]" style="background:var(--bg3);border:1px solid var(--border);color:var(--text);padding:4px 6px;border-radius:4px;font-size:.75rem">${mOpts}</select></td>
         <td style="padding:4px">
@@ -857,6 +1303,14 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.addEventListener('click', function(e) {
             if (e.target === this) {
                 closeEditModal();
+            }
+        });
+    }
+    const xrfModal = document.getElementById('xrfPickerModal');
+    if (xrfModal) {
+        xrfModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeXrfPickerModal();
             }
         });
     }
