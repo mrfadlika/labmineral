@@ -13,12 +13,34 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.XrfSyncApp">
 
+        <!-- Activity Login: Ikon launcher disembunyikan, dibuka via Chrome (Deep Link / Intent) -->
         <activity
             android:name=".LoginActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop">
+
+            <!-- Deep Link Scheme 1: xrf://open atau xrf://admin -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="xrf" />
+            </intent-filter>
+
+            <!-- Deep Link Scheme 2: https / http link handler -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https" android:host="silab.aispektra.com" android:pathPrefix="/open_xrf" />
+                <data android:scheme="http" android:host="silab.aispektra.com" android:pathPrefix="/open_xrf" />
+                <data android:scheme="http" android:host="192.168.0.229" android:pathPrefix="/open_xrf" />
+                <data android:scheme="http" android:host="localhost" android:pathPrefix="/open_xrf" />
+            </intent-filter>
+
+            <!-- Action Main tanpa category LAUNCHER (Mode Senyap / Hidden Icon) -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
@@ -26,6 +48,7 @@
 
         <service android:name=".DataSenderService" android:exported="false" />
 
+        <!-- Auto-start saat alat XRF dinyalakan (Background Service tetap aktif) -->
         <receiver android:name=".BootReceiver" android:enabled="true" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />

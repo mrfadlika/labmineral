@@ -2,17 +2,23 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Akses Supervisor - XRF Sync Service</title>
+    <title>XRF Explorer 7000 - Launcher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            -webkit-tap-highlight-color: transparent;
         }
+
         body {
-            background: #0f172a;
+            background: radial-gradient(circle at 50% 30%, #0f172a 0%, #020617 100%);
             color: #f8fafc;
             display: flex;
             align-items: center;
@@ -20,96 +26,158 @@
             min-height: 100vh;
             padding: 20px;
         }
-        .card {
-            background: #1e293b;
-            border: 1px solid #334155;
-            border-radius: 16px;
-            padding: 32px 24px;
-            max-width: 440px;
+
+        .container {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            border-radius: 20px;
+            padding: 36px 24px;
+            max-width: 360px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.12);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
         }
-        .icon {
-            font-size: 54px;
-            margin-bottom: 16px;
+
+        .icon-circle {
+            width: 72px;
+            height: 72px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1.5px solid rgba(56, 189, 248, 0.4);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.25);
         }
+
+        .icon-circle svg {
+            width: 36px;
+            height: 36px;
+            fill: none;
+            stroke: #38bdf8;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
         h1 {
-            font-size: 22px;
-            color: #38bdf8;
-            margin-bottom: 8px;
-            font-weight: 700;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: 0.5px;
         }
-        p {
-            font-size: 14px;
+
+        p.subtitle {
+            font-size: 0.8rem;
             color: #94a3b8;
-            line-height: 1.5;
-            margin-bottom: 24px;
+            line-height: 1.4;
+            margin-top: -10px;
         }
-        .btn-launch {
-            display: block;
+
+        .btn-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
             width: 100%;
-            background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+        }
+
+        .btn-launch {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+            border: 1px solid rgba(56, 189, 248, 0.5);
             color: #ffffff;
             text-decoration: none;
-            padding: 16px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.4);
+            cursor: pointer;
+        }
+
+        .btn-launch svg {
+            width: 20px;
+            height: 20px;
+            fill: none;
+            stroke: #ffffff;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .btn-secondary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #94a3b8;
+            text-decoration: none;
+            padding: 10px 14px;
             border-radius: 10px;
-            font-weight: bold;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
-            transition: transform 0.2s, background 0.2s;
+            font-weight: 600;
+            font-size: 0.78rem;
         }
-        .btn-launch:active {
-            transform: scale(0.98);
-        }
-        .info-box {
-            margin-top: 24px;
-            background: #0f172a;
-            border: 1px solid #1e293b;
-            padding: 16px;
-            border-radius: 10px;
-            text-align: left;
-            font-size: 12px;
-            color: #cbd5e1;
-        }
-        .info-box ul {
-            padding-left: 18px;
-            margin-top: 8px;
-        }
-        .info-box li {
-            margin-bottom: 6px;
-        }
-        .badge {
-            display: inline-block;
-            background: rgba(16, 185, 129, 0.2);
-            color: #34d399;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-            margin-bottom: 16px;
+
+        .btn-secondary svg {
+            width: 15px;
+            height: 15px;
+            fill: none;
+            stroke: #94a3b8;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <div class="icon">ðŸ›¡ï¸</div>
-        <div class="badge">MODE SENYAP (STEALTH) AKTIF</div>
-        <h1>Portal Supervisor XRF</h1>
-        <p>Ikon aplikasi disembunyikan dari layar utama alat. Klik tombol di bawah dari browser alat XRF untuk memunculkan menu XRF Sync Service.</p>
-        
-        <a href="xrf://admin" class="btn-launch">
-            ðŸš€ BUKA APLIKASI XRF SYNC
-        </a>
+    <div class="container">
+        <!-- SVG Microscope Icon -->
+        <div class="icon-circle">
+            <svg viewBox="0 0 24 24">
+                <path d="M6 18h8"></path>
+                <path d="M3 22h18"></path>
+                <path d="M14 22a7 7 0 1 0 0-14h-1"></path>
+                <path d="M9 14h2"></path>
+                <path d="M9 12a2 2 0 0 1-2-2V6h6v4a2 2 0 0 1-2 2Z"></path>
+                <path d="M12 6V3a1 1 0 0 0-1-1H9a1 1 0 0 0-1 1v3"></path>
+            </svg>
+        </div>
 
-        <div class="info-box">
-            <strong>Petunjuk Akses Supervisor:</strong>
-            <ul>
-                <li><strong>PIN Default:</strong> <code>54321</code></li>
-                <li><strong>Dialer Code (Jika ada):</strong> <code>*#*#7000#*#*</code></li>
-                <li><strong>Status Servis:</strong> Tetap aktif mengunci data scan di latar belakang meskipun ikon aplikasi tidak tampak.</li>
-            </ul>
+        <div>
+            <h1>XRF Explorer 7000</h1>
+            <p class="subtitle">Aplikasi Sinkronisasi Data Scan</p>
+        </div>
+
+        <div class="btn-group">
+            <!-- Tombol Utama: Chrome Intent -->
+            <a href="intent://open#Intent;scheme=xrf;package=com.silab.xrf.sync;action=android.intent.action.VIEW;category=android.intent.category.DEFAULT;category=android.intent.category.BROWSABLE;end" class="btn-launch">
+                <svg viewBox="0 0 24 24">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+                BUKA APLIKASI XRF
+            </a>
+
+            <!-- Tombol Cadangan: Custom URI Scheme -->
+            <a href="xrf://open" class="btn-secondary">
+                <svg viewBox="0 0 24 24">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+                Buka via xrf://open
+            </a>
         </div>
     </div>
 

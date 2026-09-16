@@ -45,13 +45,14 @@ if (isClient()) {
     
     // Tambahkan menu admin
     if (isAdmin()) {
-        $menu[] = ['href' => 'xrf_data.php', 'ico' => '⚡', 'label' => 'Data XRF Explorer'];
+        $menu[] = ['href' => '../xrf_php/index.php', 'ico' => '⚡', 'label' => 'Data XRF Explorer'];
         $menu[] = ['href' => 'submission.php', 'ico' => '📋', 'label' => 'Online Submissions'];
         $menu[] = ['href' => 'metode_preparasi.php', 'ico' => '🧪', 'label' => 'Metode Preparasi'];
         $menu[] = ['href' => 'pengguna.php', 'ico' => '&#128101;', 'label' => 'Pengguna'];
     }
 }
 $cur = basename($_SERVER['PHP_SELF']);
+$isXrfPhp = (strpos($_SERVER['PHP_SELF'], 'xrf_php') !== false);
 ?>
 <div id="sidebar">
     <div class="logo">
@@ -59,9 +60,18 @@ $cur = basename($_SERVER['PHP_SELF']);
         <p>Sistem Informasi Laboratorium</p>
     </div>
     <nav>
-        <?php foreach ($menu as $m): ?>
-            <a href="<?= BASE_URL ?>/pages/<?= $m['href'] ?>"
-               class="<?= $cur === $m['href'] ? 'active' : '' ?>">
+        <?php foreach ($menu as $m): 
+            $targetUrl = str_starts_with($m['href'], '..') 
+                ? BASE_URL . '/' . ltrim(substr($m['href'], 2), '/') 
+                : BASE_URL . '/pages/' . $m['href'];
+            
+            $isActive = ($cur === basename($m['href']));
+            if ($isXrfPhp && str_contains($m['href'], 'xrf_php')) {
+                $isActive = true;
+            }
+        ?>
+            <a href="<?= $targetUrl ?>"
+               class="<?= $isActive ? 'active' : '' ?>">
                 <span class="ico"><?= $m['ico'] ?></span>
                 <?= $m['label'] ?>
             </a>

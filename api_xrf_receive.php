@@ -34,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         'service'        => 'XRF Explorer 7000 API Receiver',
         'mode'           => CONNECTION_TEST_ONLY ? 'CONNECTION_TEST_ONLY' : 'DATABASE_SAVING_ENABLED',
         'message'        => 'API Receiver is ONLINE and listening for HTTP POST JSON requests from XRF Explorer 7000.',
-        'dashboard_url'  => (isset($_SERVER['HTTP_HOST']) ? 'http://' . $_SERVER['HTTP_HOST'] : '') . '/labmineral/pages/xrf_dashboard.php'
+        'dashboard_url'  => 'https://silab.aispektra.com/pages/xrf_dashboard.php'
     ], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
     exit;
 }
@@ -184,6 +184,55 @@ try {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
         ]);
     }
+    // Auto-create XRF tables if not yet migrated on the server
+    $db->exec("
+        CREATE TABLE IF NOT EXISTS `xrf_devices` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `device_id` VARCHAR(50) NOT NULL UNIQUE,
+            `device_name` VARCHAR(100) NOT NULL,
+            `device_type` VARCHAR(50) DEFAULT 'XRF Explorer',
+            `last_seen_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+        CREATE TABLE IF NOT EXISTS `xrf_measurements` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `device_id` VARCHAR(50) NOT NULL DEFAULT 'XRF-7000',
+            `db_source` VARCHAR(50) NOT NULL COMMENT 'metal.db, alloy.db, or mineral.db',
+            `report_id` INT NOT NULL COMMENT 'HistoryReportID from XRF SQLite',
+            `sample_name` VARCHAR(100) NOT NULL,
+            `sample_supplier` VARCHAR(100) DEFAULT NULL,
+            `test_date` DATETIME DEFAULT NULL,
+            `timestamp_ms` BIGINT DEFAULT NULL,
+            `test_time` INT DEFAULT NULL,
+            `tub_voltage` FLOAT DEFAULT NULL,
+            `tub_current` FLOAT DEFAULT NULL,
+            `work_curve_name` VARCHAR(100) DEFAULT NULL,
+            `grade` VARCHAR(100) DEFAULT NULL,
+            `operator` VARCHAR(50) DEFAULT NULL,
+            `gps` VARCHAR(100) DEFAULT '(0.0,0.0)',
+            `longitude` DOUBLE DEFAULT 0,
+            `latitude` DOUBLE DEFAULT 0,
+            `altitude` DOUBLE DEFAULT 0,
+            `cps` INT DEFAULT 0,
+            `counts` INT DEFAULT 0,
+            `temperature` FLOAT DEFAULT 0,
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE KEY `unique_device_report` (`device_id`, `db_source`, `report_id`, `timestamp_ms`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+        CREATE TABLE IF NOT EXISTS `xrf_measurement_elements` (
+            `id` INT AUTO_INCREMENT PRIMARY KEY,
+            `measurement_id` INT NOT NULL,
+            `element_name` VARCHAR(10) NOT NULL,
+            `concentration` DOUBLE NOT NULL DEFAULT 0,
+            `element_error` DOUBLE DEFAULT 0,
+            `unit` VARCHAR(20) DEFAULT '%',
+            `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            INDEX `idx_meas_id` (`measurement_id`),
+            INDEX `idx_element_search` (`measurement_id`, `element_name`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+    ");
 
     $db->beginTransaction();
 

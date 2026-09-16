@@ -21,8 +21,8 @@ public class DataSenderService extends Service {
     private static final String TAG = "DataSenderService";
     private static final String CHANNEL_ID = "XrfSyncChannel";
     
-    // Sesuaikan URL ini dengan alamat server LIMS lokal Anda
-    private static final String API_URL = "http://192.168.1.100/labmineral/api/api_xrf_receive.php";
+    // Server LIMS Aispektra URL
+    private static final String API_URL = "https://silab.aispektra.com/api/api_xrf_receive.php";
     private static final String API_KEY = "xrf_secret_labmineral_2026";
     
     private DatabaseHelper dbHelper;
