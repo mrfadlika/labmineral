@@ -277,35 +277,78 @@ try {
     $cps          = intval($data['cps'] ?? 0);
     $counts       = intval($data['counts'] ?? 0);
     $temperature  = floatval($data['temperature'] ?? 0);
-    $elements     = isset($data['elements']) && is_array($data['elements']) ? $data['elements'] : [];
+    $sample_supplier    = trim($data['sample_supplier'] ?? '');
+    $device_type        = trim($data['device_type'] ?? 'XRF Explorer');
+    $spectrum_name      = trim($data['spectrum_name'] ?? '');
+    $test_point         = intval($data['test_point'] ?? 1);
+    $peak               = intval($data['peak'] ?? 0);
+    $fwhm               = intval($data['fwhm'] ?? 0);
+    $ms8607_pressure    = floatval($data['ms8607_pressure'] ?? 0);
+    $ms8607_temperature = floatval($data['ms8607_temperature'] ?? 0);
+    $ms8607_humidity    = floatval($data['ms8607_humidity'] ?? 0);
 
     if ($existing) {
         $measurement_id = $existing['id'];
-        $update_stmt = $db->prepare("UPDATE xrf_measurements SET 
-            sample_name = ?, test_date = ?, timestamp_ms = ?, test_time = ?,
-            tub_voltage = ?, tub_current = ?, work_curve_name = ?, grade = ?, operator = ?,
-            gps = ?, longitude = ?, latitude = ?, altitude = ?, cps = ?, counts = ?, temperature = ?
-            WHERE id = ?");
-        $update_stmt->execute([
-            $sample_name, $test_date, $timestamp_ms, $test_time,
-            $tub_voltage, $tub_current, $work_curve, $grade, $operator,
-            $gps, $longitude, $latitude, $altitude, $cps, $counts, $temperature,
-            $measurement_id
-        ]);
+        try {
+            $update_stmt = $db->prepare("UPDATE xrf_measurements SET 
+                sample_name = ?, sample_supplier = ?, test_date = ?, timestamp_ms = ?, test_time = ?,
+                tub_voltage = ?, tub_current = ?, work_curve_name = ?, grade = ?, operator = ?,
+                device_type = ?, spectrum_name = ?, test_point = ?,
+                gps = ?, longitude = ?, latitude = ?, altitude = ?, cps = ?, counts = ?, temperature = ?,
+                peak = ?, fwhm = ?, ms8607_pressure = ?, ms8607_temperature = ?, ms8607_humidity = ?,
+                client_ip = ?, received_at = NOW()
+                WHERE id = ?");
+            $update_stmt->execute([
+                $sample_name, $sample_supplier, $test_date, $timestamp_ms, $test_time,
+                $tub_voltage, $tub_current, $work_curve, $grade, $operator,
+                $device_type, $spectrum_name, $test_point,
+                $gps, $longitude, $latitude, $altitude, $cps, $counts, $temperature,
+                $peak, $fwhm, $ms8607_pressure, $ms8607_temperature, $ms8607_humidity,
+                $client_ip,
+                $measurement_id
+            ]);
+        } catch (Exception $eUpd) {
+            $update_stmt = $db->prepare("UPDATE xrf_measurements SET 
+                sample_name = ?, test_date = ?, timestamp_ms = ?, test_time = ?,
+                tub_voltage = ?, tub_current = ?, work_curve_name = ?, grade = ?, operator = ?,
+                gps = ?, longitude = ?, latitude = ?, altitude = ?, cps = ?, counts = ?, temperature = ?
+                WHERE id = ?");
+            $update_stmt->execute([
+                $sample_name, $test_date, $timestamp_ms, $test_time,
+                $tub_voltage, $tub_current, $work_curve, $grade, $operator,
+                $gps, $longitude, $latitude, $altitude, $cps, $counts, $temperature,
+                $measurement_id
+            ]);
+        }
         $del_elm = $db->prepare("DELETE FROM xrf_measurement_elements WHERE measurement_id = ?");
         $del_elm->execute([$measurement_id]);
         $action = 'updated';
     } else {
-        $ins_stmt = $db->prepare("INSERT INTO xrf_measurements (
-            device_id, db_source, report_id, sample_name, test_date, timestamp_ms, test_time,
-            tub_voltage, tub_current, work_curve_name, grade, operator, gps, longitude, latitude, altitude,
-            cps, counts, temperature
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-        $ins_stmt->execute([
-            $device_id, $db_source, $report_id, $sample_name, $test_date, $timestamp_ms, $test_time,
-            $tub_voltage, $tub_current, $work_curve, $grade, $operator, $gps, $longitude, $latitude, $altitude,
-            $cps, $counts, $temperature
-        ]);
+        try {
+            $ins_stmt = $db->prepare("INSERT INTO xrf_measurements (
+                device_id, db_source, report_id, sample_name, sample_supplier, test_date, timestamp_ms, test_time,
+                tub_voltage, tub_current, work_curve_name, grade, operator, device_type, spectrum_name, test_point,
+                gps, longitude, latitude, altitude, cps, counts, temperature,
+                peak, fwhm, ms8607_pressure, ms8607_temperature, ms8607_humidity, client_ip
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $ins_stmt->execute([
+                $device_id, $db_source, $report_id, $sample_name, $sample_supplier, $test_date, $timestamp_ms, $test_time,
+                $tub_voltage, $tub_current, $work_curve, $grade, $operator, $device_type, $spectrum_name, $test_point,
+                $gps, $longitude, $latitude, $altitude, $cps, $counts, $temperature,
+                $peak, $fwhm, $ms8607_pressure, $ms8607_temperature, $ms8607_humidity, $client_ip
+            ]);
+        } catch (Exception $eIns) {
+            $ins_stmt = $db->prepare("INSERT INTO xrf_measurements (
+                device_id, db_source, report_id, sample_name, test_date, timestamp_ms, test_time,
+                tub_voltage, tub_current, work_curve_name, grade, operator, gps, longitude, latitude, altitude,
+                cps, counts, temperature
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $ins_stmt->execute([
+                $device_id, $db_source, $report_id, $sample_name, $test_date, $timestamp_ms, $test_time,
+                $tub_voltage, $tub_current, $work_curve, $grade, $operator, $gps, $longitude, $latitude, $altitude,
+                $cps, $counts, $temperature
+            ]);
+        }
         $measurement_id = $db->lastInsertId();
         $action = 'inserted';
     }
