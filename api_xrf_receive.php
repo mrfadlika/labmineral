@@ -233,6 +233,29 @@ try {
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
     ");
 
+    // Auto-heal / add any missing columns in xrf_measurements and xrf_devices
+    $cols_to_add = [
+        'sample_supplier'    => 'VARCHAR(100) DEFAULT NULL',
+        'device_type'        => 'VARCHAR(50) DEFAULT "XRF Explorer"',
+        'spectrum_name'      => 'VARCHAR(100) DEFAULT NULL',
+        'test_point'         => 'INT DEFAULT 1',
+        'peak'               => 'INT DEFAULT 0',
+        'fwhm'               => 'INT DEFAULT 0',
+        'ms8607_pressure'    => 'DOUBLE DEFAULT 0',
+        'ms8607_temperature' => 'DOUBLE DEFAULT 0',
+        'ms8607_humidity'    => 'DOUBLE DEFAULT 0',
+        'client_ip'          => 'VARCHAR(45) DEFAULT NULL',
+        'received_at'        => 'DATETIME DEFAULT CURRENT_TIMESTAMP'
+    ];
+    foreach ($cols_to_add as $col => $col_def) {
+        try {
+            $db->exec("ALTER TABLE `xrf_measurements` ADD COLUMN `$col` $col_def");
+        } catch (Exception $ignCol) {}
+    }
+    try {
+        $db->exec("ALTER TABLE `xrf_devices` ADD COLUMN `device_type` VARCHAR(50) DEFAULT 'XRF Explorer'");
+    } catch (Exception $ignDevCol) {}
+
     $db->beginTransaction();
 
     $test_date    = !empty($data['test_date']) ? $data['test_date'] : date('Y-m-d H:i:s');
