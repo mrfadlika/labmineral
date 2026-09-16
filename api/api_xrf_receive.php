@@ -209,11 +209,18 @@ try {
 
     $db->beginTransaction();
     
-    // Auto-register device to xrf_devices to update last_seen_at
-    $dev_stmt = $db->prepare("INSERT INTO xrf_devices (device_id, device_name, device_type, last_seen_at)
-        VALUES (?, ?, ?, NOW())
-        ON DUPLICATE KEY UPDATE last_seen_at = NOW(), device_type = IF(VALUES(device_type) != '', VALUES(device_type), device_type)");
-    $dev_stmt->execute([$device_id, 'Alat XRF - ' . $device_id, $device_type ?: 'XRF Explorer']);
+    // Auto-register device to xrf_devices to update last_seen_at (Safe try-catch)
+    try {
+        $dev_stmt = $db->prepare("INSERT INTO xrf_devices (device_id, device_name, device_type, last_seen_at)
+            VALUES (?, ?, ?, NOW())
+            ON DUPLICATE KEY UPDATE last_seen_at = NOW()");
+        $dev_stmt->execute([$device_id, 'Alat XRF - ' . $device_id, $device_type ?: 'XRF Explorer']);
+    } catch (Exception $ignDev) {
+        try {
+            $upd_dev = $db->prepare("UPDATE xrf_devices SET last_seen_at = NOW() WHERE device_id = ?");
+            $upd_dev->execute([$device_id]);
+        } catch (Exception $ign) {}
+    }
     
     // Stop processing if this is just a heartbeat ping
     if ($db_source === 'ping') {

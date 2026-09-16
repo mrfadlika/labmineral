@@ -126,15 +126,14 @@ try {
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC
         ]);
     }
-    // Update last_seen_at for this device
-    $upd_dev = $db->prepare("UPDATE xrf_devices SET last_seen_at = NOW() WHERE device_id = ?");
-    $upd_dev->execute([$device_id]);
-    
-    // If no rows affected (device not in DB), you might want to insert it, but for now we assume it exists.
-    if ($upd_dev->rowCount() == 0) {
-        $ins_dev = $db->prepare("INSERT INTO xrf_devices (device_id, device_name, device_type) VALUES (?, ?, ?)");
-        $ins_dev->execute([$device_id, 'Alat XRF - ' . $device_id, 'XRF Explorer']);
-    }
+    try {
+        $upd_dev = $db->prepare("UPDATE xrf_devices SET last_seen_at = NOW() WHERE device_id = ?");
+        $upd_dev->execute([$device_id]);
+        if ($upd_dev->rowCount() == 0) {
+            $ins_dev = $db->prepare("INSERT INTO xrf_devices (device_id, device_name) VALUES (?, ?)");
+            $ins_dev->execute([$device_id, 'Alat XRF - ' . $device_id]);
+        }
+    } catch (Exception $ign) {}
 } catch (Exception $e) {
     // Ignore DB errors for status update so it doesn't break the flow
 }
