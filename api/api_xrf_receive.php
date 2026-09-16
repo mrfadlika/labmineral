@@ -272,8 +272,8 @@ try {
     $test_date          = !empty($data['test_date']) ? $data['test_date'] : date('Y-m-d H:i:s');
     $timestamp_ms       = floatval($data['timestamp_ms'] ?? 0);
 
-    $check_stmt = $db->prepare("SELECT id FROM xrf_measurements WHERE device_id = ? AND db_source = ? AND report_id = ? AND timestamp_ms = ?");
-    $check_stmt->execute([$device_id, $db_source, $report_id, $timestamp_ms]);
+    $check_stmt = $db->prepare("SELECT id FROM xrf_measurements WHERE device_id = ? AND db_source = ? AND report_id = ?");
+    $check_stmt->execute([$device_id, $db_source, $report_id]);
     $existing = $check_stmt->fetch();
     $test_time          = intval($data['test_time'] ?? 0);
     $tub_voltage        = floatval($data['tub_voltage'] ?? 0);
@@ -346,20 +346,43 @@ try {
                 $gps, $longitude, $latitude, $altitude, $cps, $counts, $temperature,
                 $peak, $fwhm, $ms8607_pressure, $ms8607_temperature, $ms8607_humidity, $client_ip
             ]);
+            $measurement_id = $db->lastInsertId();
+            $action = 'inserted';
         } catch (Exception $eIns) {
-            $ins_stmt = $db->prepare("INSERT INTO xrf_measurements (
-                device_id, db_source, report_id, sample_name, sample_supplier, test_date, timestamp_ms, test_time,
-                tub_voltage, tub_current, work_curve_name, grade, operator,
-                gps, longitude, latitude, altitude, cps, counts, temperature
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-            $ins_stmt->execute([
-                $device_id, $db_source, $report_id, $sample_name, $sample_supplier, $test_date, $timestamp_ms, $test_time,
-                $tub_voltage, $tub_current, $work_curve, $grade, $operator,
-                $gps, $longitude, $latitude, $altitude, $cps, $counts, $temperature
-            ]);
+            $find_dup = $db->prepare("SELECT id FROM xrf_measurements WHERE device_id = ? AND db_source = ? AND report_id = ?");
+            $find_dup->execute([$device_id, $db_source, $report_id]);
+            $dup_row = $find_dup->fetch();
+            if ($dup_row) {
+                $measurement_id = $dup_row['id'];
+                $upd_dup = $db->prepare("UPDATE xrf_measurements SET 
+                    sample_name = ?, test_date = ?, timestamp_ms = ?, test_time = ?,
+                    tub_voltage = ?, tub_current = ?, work_curve_name = ?, grade = ?, operator = ?,
+                    gps = ?, longitude = ?, latitude = ?, altitude = ?, cps = ?, counts = ?, temperature = ?
+                    WHERE id = ?");
+                $upd_dup->execute([
+                    $sample_name, $test_date, $timestamp_ms, $test_time,
+                    $tub_voltage, $tub_current, $work_curve, $grade, $operator,
+                    $gps, $longitude, $latitude, $altitude, $cps, $counts, $temperature,
+                    $measurement_id
+                ]);
+                $del_elm = $db->prepare("DELETE FROM xrf_measurement_elements WHERE measurement_id = ?");
+                $del_elm->execute([$measurement_id]);
+                $action = 'updated';
+            } else {
+                $ins_stmt = $db->prepare("INSERT INTO xrf_measurements (
+                    device_id, db_source, report_id, sample_name, sample_supplier, test_date, timestamp_ms, test_time,
+                    tub_voltage, tub_current, work_curve_name, grade, operator,
+                    gps, longitude, latitude, altitude, cps, counts, temperature
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                $ins_stmt->execute([
+                    $device_id, $db_source, $report_id, $sample_name, $sample_supplier, $test_date, $timestamp_ms, $test_time,
+                    $tub_voltage, $tub_current, $work_curve, $grade, $operator,
+                    $gps, $longitude, $latitude, $altitude, $cps, $counts, $temperature
+                ]);
+                $measurement_id = $db->lastInsertId();
+                $action = 'inserted';
+            }
         }
-        $measurement_id = $db->lastInsertId();
-        $action = 'inserted';
     }
 
     if (!empty($elements)) {
