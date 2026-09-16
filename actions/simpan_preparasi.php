@@ -6,6 +6,7 @@
 session_start();
 require_once __DIR__ . '/../config/db.php';
 cekLogin();
+ensureMetodePreparasiTable($pdo);
 
 $modeInput = $_POST['mode_input'] ?? 'single';
 $woId      = !empty($_POST['work_order_id']) ? (int)$_POST['work_order_id'] : null;

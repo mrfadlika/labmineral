@@ -436,18 +436,33 @@ function tableExists($pdo, $table) {
 }
 
 function ensureMetodePreparasiTable($pdo) {
-    if (tableExists($pdo, 'metode_preparasi')) {
-        return;
-    }
+    try {
+        if (!tableExists($pdo, 'metode_preparasi')) {
+            $pdo->exec(
+                "CREATE TABLE IF NOT EXISTS metode_preparasi (
+                    id INT AUTO_INCREMENT PRIMARY KEY,
+                    metode VARCHAR(255) NOT NULL UNIQUE,
+                    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
+            );
+            $pdo->exec(
+                "INSERT IGNORE INTO metode_preparasi (metode) VALUES
+                ('destruksi_asam'),
+                ('ekstraksi'),
+                ('pengenceran'),
+                ('fusion'),
+                ('lainnya')"
+            );
+        }
 
-    $pdo->exec(
-        "CREATE TABLE IF NOT EXISTS metode_preparasi (
-            id INT AUTO_INCREMENT PRIMARY KEY,
-            metode VARCHAR(255) NOT NULL UNIQUE,
-            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4"
-    );
+        // Auto-heal preparasi_sampel column from legacy ENUM to VARCHAR(100)
+        if (tableExists($pdo, 'preparasi_sampel')) {
+            $pdo->exec("ALTER TABLE preparasi_sampel MODIFY COLUMN metode_preparasi VARCHAR(100) NOT NULL DEFAULT 'destruksi_asam'");
+        }
+    } catch (Exception $e) {
+        // Silently catch if permission issues or already modified
+    }
 }
 
 function clientAccessTableReady($pdo) {
